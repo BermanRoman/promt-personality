@@ -716,7 +716,7 @@ def main():
     ap.add_argument("--tz", required=True, help="Asia/Yekaterinburg")
     ap.add_argument("--lat", type=float, required=True)
     ap.add_argument("--lon", type=float, required=True)
-    ap.add_argument("--node", choices=["true", "mean"], default="true",
+    ap.add_argument("--node", choices=["true", "mean"], default="mean",
                     help="истинный или средний лунный узел")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
