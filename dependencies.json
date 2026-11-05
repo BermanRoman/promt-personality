@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "dependencies": {
+    "infostyle": {
+      "source": "https://github.com/BermanRoman/promt-copywriting",
+      "file": "methodology-copywriting.md",
+      "revision": "bb091b6003f836106d09ed2bd5e91a8fb5d961dd",
+      "sha256": "74ce6804c464f953e3a7729e97bfc4ab09991ee3a749ace4cebf1cfb86749386"
+    }
+  }
+}

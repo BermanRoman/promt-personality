@@ -1,0 +1,1718 @@
+{
+  "schema_version": 2,
+  "input": {
+    "answers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1
+    ],
+    "as_of": "2026-11-05",
+    "birth_date": "1990-01-15",
+    "birth_place": "Москва, Россия",
+    "birth_time": "12:00",
+    "confirmed": true,
+    "language": "ru",
+    "latitude": 55.75,
+    "location_source": "Синтетический пример: координаты центра Москвы заданы для демонстрации.",
+    "longitude": 37.62,
+    "name": "Анна Соколова",
+    "original_text": "Вымышленный пример: Анна Соколова, 15.01.1990, 12:00, Москва, Россия. Данные и ответы синтетические.",
+    "time_accuracy": "exact",
+    "timezone": "Europe/Moscow"
+  },
+  "as_of": "2026-11-05",
+  "modules": {
+    "gematria": {
+      "status": "computed",
+      "data": {
+        "convention": "arithmetic-v1",
+        "language": "ru",
+        "normalized_name": "анна соколова",
+        "words": [
+          {
+            "word": "анна",
+            "letters": [
+              {
+                "source": "а",
+                "transliteration": "a",
+                "latin": "a",
+                "value": 1,
+                "kind": "vowel"
+              },
+              {
+                "source": "н",
+                "transliteration": "n",
+                "latin": "n",
+                "value": 14,
+                "kind": "consonant"
+              },
+              {
+                "source": "н",
+                "transliteration": "n",
+                "latin": "n",
+                "value": 14,
+                "kind": "consonant"
+              },
+              {
+                "source": "а",
+                "transliteration": "a",
+                "latin": "a",
+                "value": 1,
+                "kind": "vowel"
+              }
+            ],
+            "total": 30
+          },
+          {
+            "word": "соколова",
+            "letters": [
+              {
+                "source": "с",
+                "transliteration": "s",
+                "latin": "s",
+                "value": 19,
+                "kind": "consonant"
+              },
+              {
+                "source": "о",
+                "transliteration": "o",
+                "latin": "o",
+                "value": 15,
+                "kind": "vowel"
+              },
+              {
+                "source": "к",
+                "transliteration": "k",
+                "latin": "k",
+                "value": 11,
+                "kind": "consonant"
+              },
+              {
+                "source": "о",
+                "transliteration": "o",
+                "latin": "o",
+                "value": 15,
+                "kind": "vowel"
+              },
+              {
+                "source": "л",
+                "transliteration": "l",
+                "latin": "l",
+                "value": 12,
+                "kind": "consonant"
+              },
+              {
+                "source": "о",
+                "transliteration": "o",
+                "latin": "o",
+                "value": 15,
+                "kind": "vowel"
+              },
+              {
+                "source": "в",
+                "transliteration": "v",
+                "latin": "v",
+                "value": 22,
+                "kind": "consonant"
+              },
+              {
+                "source": "а",
+                "transliteration": "a",
+                "latin": "a",
+                "value": 1,
+                "kind": "vowel"
+              }
+            ],
+            "total": 110
+          }
+        ],
+        "total": 140,
+        "reduction": {
+          "input": 140,
+          "master": 5,
+          "single": 5,
+          "steps": [
+            140,
+            5
+          ],
+          "single_steps": [
+            140,
+            5
+          ]
+        },
+        "split_available": true,
+        "vowels": {
+          "total": 48,
+          "reduction": {
+            "input": 48,
+            "master": 3,
+            "single": 3,
+            "steps": [
+              48,
+              12,
+              3
+            ],
+            "single_steps": [
+              48,
+              12,
+              3
+            ]
+          }
+        },
+        "consonants": {
+          "total": 92,
+          "reduction": {
+            "input": 92,
+            "master": 11,
+            "single": 2,
+            "steps": [
+              92,
+              11
+            ],
+            "single_steps": [
+              92,
+              11,
+              2
+            ]
+          }
+        }
+      }
+    },
+    "numerology": {
+      "status": "computed",
+      "data": {
+        "convention": "arithmetic-v1",
+        "birth_date": "1990-01-15",
+        "as_of": "2026-11-05",
+        "square": {
+          "source_digits": "15011990",
+          "ignored_zeros": 2,
+          "cells": {
+            "1": 3,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 1,
+            "6": 0,
+            "7": 0,
+            "8": 0,
+            "9": 2
+          },
+          "rows": [
+            {
+              "digits": [
+                1,
+                4,
+                7
+              ],
+              "count": 3
+            },
+            {
+              "digits": [
+                2,
+                5,
+                8
+              ],
+              "count": 1
+            },
+            {
+              "digits": [
+                3,
+                6,
+                9
+              ],
+              "count": 2
+            }
+          ],
+          "columns": [
+            {
+              "digits": [
+                1,
+                2,
+                3
+              ],
+              "count": 3
+            },
+            {
+              "digits": [
+                4,
+                5,
+                6
+              ],
+              "count": 1
+            },
+            {
+              "digits": [
+                7,
+                8,
+                9
+              ],
+              "count": 2
+            }
+          ],
+          "diagonals": [
+            {
+              "digits": [
+                1,
+                5,
+                9
+              ],
+              "count": 6
+            },
+            {
+              "digits": [
+                3,
+                5,
+                7
+              ],
+              "count": 1
+            }
+          ]
+        },
+        "key_numbers": {
+          "life_path": {
+            "input": 26,
+            "master": 8,
+            "single": 8,
+            "steps": [
+              26,
+              8
+            ],
+            "single_steps": [
+              26,
+              8
+            ]
+          },
+          "birthday": {
+            "input": 15,
+            "master": 6,
+            "single": 6,
+            "steps": [
+              15,
+              6
+            ],
+            "single_steps": [
+              15,
+              6
+            ]
+          },
+          "destiny": {
+            "input": 140,
+            "master": 5,
+            "single": 5,
+            "steps": [
+              140,
+              5
+            ],
+            "single_steps": [
+              140,
+              5
+            ]
+          },
+          "soul": {
+            "input": 48,
+            "master": 3,
+            "single": 3,
+            "steps": [
+              48,
+              12,
+              3
+            ],
+            "single_steps": [
+              48,
+              12,
+              3
+            ]
+          },
+          "personality": {
+            "input": 92,
+            "master": 11,
+            "single": 2,
+            "steps": [
+              92,
+              11
+            ],
+            "single_steps": [
+              92,
+              11,
+              2
+            ]
+          },
+          "maturity": {
+            "input": 13,
+            "master": 4,
+            "single": 4,
+            "steps": [
+              13,
+              4
+            ],
+            "single_steps": [
+              13,
+              4
+            ]
+          }
+        },
+        "life_cycles": {
+          "month": {
+            "input": 1,
+            "master": 1,
+            "single": 1,
+            "steps": [
+              1
+            ],
+            "single_steps": [
+              1
+            ]
+          },
+          "day": {
+            "input": 15,
+            "master": 6,
+            "single": 6,
+            "steps": [
+              15,
+              6
+            ],
+            "single_steps": [
+              15,
+              6
+            ]
+          },
+          "year": {
+            "input": 1990,
+            "master": 1,
+            "single": 1,
+            "steps": [
+              1990,
+              19,
+              10,
+              1
+            ],
+            "single_steps": [
+              1990,
+              19,
+              10,
+              1
+            ]
+          }
+        },
+        "pinnacles": [
+          {
+            "number": {
+              "input": 7,
+              "master": 7,
+              "single": 7,
+              "steps": [
+                7
+              ],
+              "single_steps": [
+                7
+              ]
+            },
+            "age_start_inclusive": 0,
+            "age_end_exclusive": 29
+          },
+          {
+            "number": {
+              "input": 7,
+              "master": 7,
+              "single": 7,
+              "steps": [
+                7
+              ],
+              "single_steps": [
+                7
+              ]
+            },
+            "age_start_inclusive": 29,
+            "age_end_exclusive": 38
+          },
+          {
+            "number": {
+              "input": 14,
+              "master": 5,
+              "single": 5,
+              "steps": [
+                14,
+                5
+              ],
+              "single_steps": [
+                14,
+                5
+              ]
+            },
+            "age_start_inclusive": 38,
+            "age_end_exclusive": 47
+          },
+          {
+            "number": {
+              "input": 2,
+              "master": 2,
+              "single": 2,
+              "steps": [
+                2
+              ],
+              "single_steps": [
+                2
+              ]
+            },
+            "age_start_inclusive": 47,
+            "age_end_exclusive": null
+          }
+        ],
+        "challenges": [
+          5,
+          5,
+          0,
+          0
+        ],
+        "personal_cycles": {
+          "year": {
+            "input": 17,
+            "master": 8,
+            "single": 8,
+            "steps": [
+              17,
+              8
+            ],
+            "single_steps": [
+              17,
+              8
+            ]
+          },
+          "month": {
+            "input": 19,
+            "master": 1,
+            "single": 1,
+            "steps": [
+              19,
+              10,
+              1
+            ],
+            "single_steps": [
+              19,
+              10,
+              1
+            ]
+          },
+          "day": {
+            "input": 6,
+            "master": 6,
+            "single": 6,
+            "steps": [
+              6
+            ],
+            "single_steps": [
+              6
+            ]
+          },
+          "year_changes": "January 1"
+        }
+      }
+    },
+    "archetypes": {
+      "status": "computed",
+      "data": {
+        "convention": "arithmetic-v1",
+        "scores": [
+          {
+            "name": "Заботливый",
+            "questions": [
+              4,
+              20,
+              25
+            ],
+            "score": 14,
+            "rank": 1
+          },
+          {
+            "name": "Искатель",
+            "questions": [
+              5,
+              18,
+              35
+            ],
+            "score": 13,
+            "rank": 2
+          },
+          {
+            "name": "Шут",
+            "questions": [
+              12,
+              19,
+              30
+            ],
+            "score": 11,
+            "rank": 3
+          },
+          {
+            "name": "Бунтарь",
+            "questions": [
+              6,
+              24,
+              29
+            ],
+            "score": 9,
+            "rank": 4
+          },
+          {
+            "name": "Любящий",
+            "questions": [
+              7,
+              13,
+              34
+            ],
+            "score": 9,
+            "rank": 4
+          },
+          {
+            "name": "Маг",
+            "questions": [
+              10,
+              23,
+              26
+            ],
+            "score": 9,
+            "rank": 4
+          },
+          {
+            "name": "Герой",
+            "questions": [
+              3,
+              14,
+              31
+            ],
+            "score": 8,
+            "rank": 5
+          },
+          {
+            "name": "Правитель",
+            "questions": [
+              9,
+              17,
+              32
+            ],
+            "score": 8,
+            "rank": 5
+          },
+          {
+            "name": "Творец",
+            "questions": [
+              8,
+              21,
+              28
+            ],
+            "score": 7,
+            "rank": 6
+          },
+          {
+            "name": "Мудрец",
+            "questions": [
+              11,
+              15,
+              36
+            ],
+            "score": 7,
+            "rank": 6
+          },
+          {
+            "name": "Славный малый",
+            "questions": [
+              2,
+              22,
+              27
+            ],
+            "score": 6,
+            "rank": 7
+          },
+          {
+            "name": "Простодушный",
+            "questions": [
+              1,
+              16,
+              33
+            ],
+            "score": 5,
+            "rank": 8
+          }
+        ],
+        "rank_groups": [
+          {
+            "rank": 1,
+            "score": 14,
+            "names": [
+              "Заботливый"
+            ]
+          },
+          {
+            "rank": 2,
+            "score": 13,
+            "names": [
+              "Искатель"
+            ]
+          },
+          {
+            "rank": 3,
+            "score": 11,
+            "names": [
+              "Шут"
+            ]
+          },
+          {
+            "rank": 4,
+            "score": 9,
+            "names": [
+              "Бунтарь",
+              "Любящий",
+              "Маг"
+            ]
+          },
+          {
+            "rank": 5,
+            "score": 8,
+            "names": [
+              "Герой",
+              "Правитель"
+            ]
+          },
+          {
+            "rank": 6,
+            "score": 7,
+            "names": [
+              "Творец",
+              "Мудрец"
+            ]
+          },
+          {
+            "rank": 7,
+            "score": 6,
+            "names": [
+              "Славный малый"
+            ]
+          },
+          {
+            "rank": 8,
+            "score": 5,
+            "names": [
+              "Простодушный"
+            ]
+          }
+        ],
+        "highest": [
+          "Заботливый"
+        ],
+        "lowest": [
+          "Простодушный"
+        ],
+        "caution": "Scores compare responses within one profile; a low score does not establish repression."
+      }
+    },
+    "human_design": {
+      "status": "computed",
+      "data": {
+        "input": {
+          "local_time": "15.01.1990 12:00",
+          "timezone": "Europe/Moscow",
+          "utc_offset": 3.0,
+          "utc_time": "15.01.1990 09:00",
+          "lat": 55.75,
+          "lon": 37.62,
+          "node": "средний",
+          "fold": 0,
+          "local_iso": "1990-01-15T12:00:00+03:00",
+          "utc_iso": "1990-01-15T09:00:00+00:00"
+        },
+        "provenance": {
+          "backend": "astronomy",
+          "engine_version": "2.1.19",
+          "coordinate_frame": "geocentric true ecliptic/equinox of date",
+          "planet_positions": "apparent: light-time and aberration",
+          "time_scale": "UTC approximates UT1; TT from engine Delta-T model",
+          "node_model": "mean node polynomial (approximate)",
+          "asc_mc_model": "legacy mean sidereal time and obliquity (approximate)",
+          "date_range_utc": "1800-01-01 inclusive to 2051-01-01 exclusive; birth and design",
+          "solar_arc_degrees": 88.0,
+          "design_utc_iso": "1989-10-20T09:02:31.454258+00:00",
+          "limitations": "HD/astrology are symbolic systems without established scientific validity; boundary assignments and color/tone are sensitive to time and model precision",
+          "deprecated_fields": {
+            "chart.open_centers": "alias of undefined_centers; use completely_open_centers for centers without active gates"
+          }
+        },
+        "design_date_utc": "20.10.1989 09:02",
+        "personality": {
+          "Солнце": {
+            "longitude": 294.9510608771644,
+            "gate": 61,
+            "line": 5,
+            "sign": "24°57' Козерог",
+            "line_edge": false
+          },
+          "Земля": {
+            "longitude": 114.95106087716442,
+            "gate": 62,
+            "line": 5,
+            "sign": "24°57' Рак",
+            "line_edge": false
+          },
+          "Северный узел": {
+            "longitude": 317.6969870181255,
+            "gate": 13,
+            "line": 5,
+            "sign": "17°42' Водолей",
+            "line_edge": false
+          },
+          "Южный узел": {
+            "longitude": 137.69698701812553,
+            "gate": 7,
+            "line": 5,
+            "sign": "17°42' Лев",
+            "line_edge": false
+          },
+          "Луна": {
+            "longitude": 165.9373948072296,
+            "gate": 64,
+            "line": 5,
+            "sign": "15°56' Дева",
+            "line_edge": false
+          },
+          "Меркурий": {
+            "longitude": 281.4336673585239,
+            "gate": 38,
+            "line": 3,
+            "sign": "11°26' Козерог",
+            "line_edge": false
+          },
+          "Венера": {
+            "longitude": 300.76128676785015,
+            "gate": 60,
+            "line": 5,
+            "sign": "0°46' Водолей",
+            "line_edge": false
+          },
+          "Марс": {
+            "longitude": 259.82023009460426,
+            "gate": 26,
+            "line": 4,
+            "sign": "19°49' Стрелец",
+            "line_edge": true
+          },
+          "Юпитер": {
+            "longitude": 93.38070394693703,
+            "gate": 15,
+            "line": 6,
+            "sign": "3°23' Рак",
+            "line_edge": false
+          },
+          "Сатурн": {
+            "longitude": 287.2996673645006,
+            "gate": 54,
+            "line": 3,
+            "sign": "17°18' Козерог",
+            "line_edge": false
+          },
+          "Уран": {
+            "longitude": 276.6048294988478,
+            "gate": 58,
+            "line": 3,
+            "sign": "6°36' Козерог",
+            "line_edge": false
+          },
+          "Нептун": {
+            "longitude": 282.5607098173666,
+            "gate": 38,
+            "line": 4,
+            "sign": "12°34' Козерог",
+            "line_edge": false
+          },
+          "Плутон": {
+            "longitude": 227.42630104670252,
+            "gate": 1,
+            "line": 5,
+            "sign": "17°26' Скорпион",
+            "line_edge": false
+          }
+        },
+        "design": {
+          "Солнце": {
+            "longitude": 206.95106087026846,
+            "gate": 50,
+            "line": 1,
+            "sign": "26°57' Весы",
+            "line_edge": false
+          },
+          "Земля": {
+            "longitude": 26.951060870268464,
+            "gate": 3,
+            "line": 1,
+            "sign": "26°57' Овен",
+            "line_edge": false
+          },
+          "Северный узел": {
+            "longitude": 322.303872798137,
+            "gate": 49,
+            "line": 4,
+            "sign": "22°18' Водолей",
+            "line_edge": false
+          },
+          "Южный узел": {
+            "longitude": 142.30387279813698,
+            "gate": 4,
+            "line": 4,
+            "sign": "22°18' Лев",
+            "line_edge": false
+          },
+          "Луна": {
+            "longitude": 102.52229420900538,
+            "gate": 39,
+            "line": 4,
+            "sign": "12°31' Рак",
+            "line_edge": false
+          },
+          "Меркурий": {
+            "longitude": 192.97168921444393,
+            "gate": 48,
+            "line": 4,
+            "sign": "12°58' Весы",
+            "line_edge": false
+          },
+          "Венера": {
+            "longitude": 252.97857754562037,
+            "gate": 5,
+            "line": 2,
+            "sign": "12°59' Стрелец",
+            "line_edge": false
+          },
+          "Марс": {
+            "longitude": 200.11570823873944,
+            "gate": 57,
+            "line": 6,
+            "sign": "20°07' Весы",
+            "line_edge": false
+          },
+          "Юпитер": {
+            "longitude": 100.75238953380294,
+            "gate": 39,
+            "line": 2,
+            "sign": "10°45' Рак",
+            "line_edge": false
+          },
+          "Сатурн": {
+            "longitude": 278.5241983334983,
+            "gate": 58,
+            "line": 5,
+            "sign": "8°31' Козерог",
+            "line_edge": true
+          },
+          "Уран": {
+            "longitude": 272.01782612209615,
+            "gate": 10,
+            "line": 5,
+            "sign": "2°01' Козерог",
+            "line_edge": true
+          },
+          "Нептун": {
+            "longitude": 279.84031621125735,
+            "gate": 38,
+            "line": 1,
+            "sign": "9°50' Козерог",
+            "line_edge": false
+          },
+          "Плутон": {
+            "longitude": 224.38593849940486,
+            "gate": 1,
+            "line": 2,
+            "sign": "14°23' Скорпион",
+            "line_edge": false
+          }
+        },
+        "profile": "5/1",
+        "cross": {
+          "angle": "Левоугольный крест",
+          "gates": [
+            61,
+            62,
+            50,
+            3
+          ]
+        },
+        "chart": {
+          "channels": [
+            [
+              3,
+              60
+            ],
+            [
+              5,
+              15
+            ],
+            [
+              10,
+              57
+            ]
+          ],
+          "defined_centers": [
+            "G-центр",
+            "Корень",
+            "Сакрал",
+            "Селезёнка"
+          ],
+          "undefined_centers": [
+            "Аджна",
+            "Голова",
+            "Горло",
+            "Солнечное сплетение",
+            "Эго"
+          ],
+          "completely_open_centers": [],
+          "open_centers": [
+            "Аджна",
+            "Голова",
+            "Горло",
+            "Солнечное сплетение",
+            "Эго"
+          ],
+          "type": "Генератор",
+          "strategy": "Ждать отклика",
+          "authority": "Сакральный",
+          "definition": "Единичное",
+          "components": [
+            [
+              "G-центр",
+              "Корень",
+              "Сакрал",
+              "Селезёнка"
+            ]
+          ]
+        },
+        "quarter": "Мутации",
+        "determination": {
+          "color": 4,
+          "tone": 5,
+          "name": "Прикосновение",
+          "notice": "Символическая классификация HD; не рекомендация по питанию или здоровью"
+        },
+        "astro": {
+          "Асцендент": "15°17' Телец",
+          "Середина неба": "15°50' Козерог",
+          "asc_deg": 45.28447666575346,
+          "mc_deg": 285.8290583149751
+        }
+      }
+    },
+    "astrology": {
+      "status": "computed",
+      "data": {
+        "planets": {
+          "sun": {
+            "longitude": 294.9510608771644,
+            "sign": "24°57' Козерог"
+          },
+          "moon": {
+            "longitude": 165.9373948072296,
+            "sign": "15°56' Дева"
+          },
+          "mercury": {
+            "longitude": 281.4336673585239,
+            "sign": "11°26' Козерог"
+          },
+          "venus": {
+            "longitude": 300.76128676785015,
+            "sign": "0°46' Водолей"
+          },
+          "mars": {
+            "longitude": 259.82023009460426,
+            "sign": "19°49' Стрелец"
+          },
+          "jupiter": {
+            "longitude": 93.38070394693703,
+            "sign": "3°23' Рак"
+          },
+          "saturn": {
+            "longitude": 287.2996673645006,
+            "sign": "17°18' Козерог"
+          },
+          "uranus": {
+            "longitude": 276.6048294988478,
+            "sign": "6°36' Козерог"
+          },
+          "neptune": {
+            "longitude": 282.5607098173666,
+            "sign": "12°34' Козерог"
+          },
+          "pluto": {
+            "longitude": 227.42630104670252,
+            "sign": "17°26' Скорпион"
+          }
+        },
+        "ascendant": {
+          "longitude": 45.28447666575346,
+          "sign": "15°17' Телец"
+        },
+        "midheaven": {
+          "longitude": 285.8290583149751,
+          "sign": "15°50' Козерог"
+        },
+        "provenance": {
+          "backend": "astronomy",
+          "engine_version": "2.1.19",
+          "coordinate_frame": "geocentric true ecliptic/equinox of date",
+          "planet_positions": "apparent: light-time and aberration",
+          "time_scale": "UTC approximates UT1; TT from engine Delta-T model",
+          "node_model": "mean node polynomial (approximate)",
+          "asc_mc_model": "legacy mean sidereal time and obliquity (approximate)",
+          "date_range_utc": "1800-01-01 inclusive to 2051-01-01 exclusive; birth and design",
+          "solar_arc_degrees": 88.0,
+          "design_utc_iso": "1989-10-20T09:02:31.454258+00:00",
+          "limitations": "HD/astrology are symbolic systems without established scientific validity; boundary assignments and color/tone are sensitive to time and model precision",
+          "deprecated_fields": {
+            "chart.open_centers": "alias of undefined_centers; use completely_open_centers for centers without active gates"
+          }
+        }
+      }
+    }
+  },
+  "facts": [
+    {
+      "id": "gem.method",
+      "section": "gematria",
+      "label": "Метод счёта имени",
+      "value": {
+        "language": "ru",
+        "convention": "arithmetic-v1",
+        "method": "Транслитерация по явной таблице ISO 9 → удаление диакритики → A1Z26; Ь/Ъ дают ноль; гласные определяются по исходным русским буквам."
+      },
+      "detail": "Нормализация: NFC и нижний регистр; ASCII-пробел, дефис и апострофы '/’ разделяют слова, повторные разделители сворачиваются; неизвестные знаки и смешанные алфавиты отклоняются."
+    },
+    {
+      "id": "gem.words",
+      "section": "gematria",
+      "label": "Суммы слов имени",
+      "value": [
+        {
+          "word": "анна",
+          "total": 30
+        },
+        {
+          "word": "соколова",
+          "total": 110
+        }
+      ],
+      "detail": "Слова после нормализации; сумма значений слов равна общей сумме имени. Посимвольная трасса сохранена в модуле гематрии."
+    },
+    {
+      "id": "gem.total",
+      "section": "gematria",
+      "label": "Сумма имени",
+      "value": 140,
+      "detail": "140 → 5; однозначно: 140 → 5"
+    },
+    {
+      "id": "gem.vowels",
+      "section": "gematria",
+      "label": "Гласные",
+      "value": 48,
+      "detail": "48 → 12 → 3; однозначно: 48 → 12 → 3"
+    },
+    {
+      "id": "gem.consonants",
+      "section": "gematria",
+      "label": "Согласные",
+      "value": 92,
+      "detail": "92 → 11; однозначно: 92 → 11 → 2"
+    },
+    {
+      "id": "num.life_path",
+      "section": "numerology",
+      "label": "Жизненный путь",
+      "value": 8,
+      "detail": "26 → 8; однозначно: 26 → 8"
+    },
+    {
+      "id": "num.birthday",
+      "section": "numerology",
+      "label": "День рождения",
+      "value": 6,
+      "detail": "15 → 6; однозначно: 15 → 6"
+    },
+    {
+      "id": "num.destiny",
+      "section": "numerology",
+      "label": "Судьба имени",
+      "value": 5,
+      "detail": "140 → 5; однозначно: 140 → 5"
+    },
+    {
+      "id": "num.soul",
+      "section": "numerology",
+      "label": "Душевное стремление",
+      "value": 3,
+      "detail": "48 → 12 → 3; однозначно: 48 → 12 → 3"
+    },
+    {
+      "id": "num.personality",
+      "section": "numerology",
+      "label": "Личность",
+      "value": 11,
+      "detail": "92 → 11; однозначно: 92 → 11 → 2"
+    },
+    {
+      "id": "num.maturity",
+      "section": "numerology",
+      "label": "Зрелость",
+      "value": 4,
+      "detail": "13 → 4; однозначно: 13 → 4"
+    },
+    {
+      "id": "num.matrix.1",
+      "section": "numerology",
+      "label": "Количество цифры 1",
+      "value": 3,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.2",
+      "section": "numerology",
+      "label": "Количество цифры 2",
+      "value": 0,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.3",
+      "section": "numerology",
+      "label": "Количество цифры 3",
+      "value": 0,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.4",
+      "section": "numerology",
+      "label": "Количество цифры 4",
+      "value": 0,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.5",
+      "section": "numerology",
+      "label": "Количество цифры 5",
+      "value": 1,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.6",
+      "section": "numerology",
+      "label": "Количество цифры 6",
+      "value": 0,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.7",
+      "section": "numerology",
+      "label": "Количество цифры 7",
+      "value": 0,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.8",
+      "section": "numerology",
+      "label": "Количество цифры 8",
+      "value": 0,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.matrix.9",
+      "section": "numerology",
+      "label": "Количество цифры 9",
+      "value": 2,
+      "detail": "Только цифры даты DDMMYYYY, без рабочих чисел."
+    },
+    {
+      "id": "num.cycle.month",
+      "section": "life_cycles",
+      "label": "Жизненный цикл месяца",
+      "value": 1,
+      "detail": "1; однозначно: 1"
+    },
+    {
+      "id": "num.cycle.day",
+      "section": "life_cycles",
+      "label": "Жизненный цикл дня",
+      "value": 6,
+      "detail": "15 → 6; однозначно: 15 → 6"
+    },
+    {
+      "id": "num.cycle.year",
+      "section": "life_cycles",
+      "label": "Жизненный цикл года",
+      "value": 1,
+      "detail": "1990 → 19 → 10 → 1; однозначно: 1990 → 19 → 10 → 1"
+    },
+    {
+      "id": "num.pinnacle.1",
+      "section": "life_cycles",
+      "label": "Пик 1",
+      "value": 7,
+      "detail": "7; однозначно: 7; возраст [0, 29)"
+    },
+    {
+      "id": "num.pinnacle.2",
+      "section": "life_cycles",
+      "label": "Пик 2",
+      "value": 7,
+      "detail": "7; однозначно: 7; возраст [29, 38)"
+    },
+    {
+      "id": "num.pinnacle.3",
+      "section": "life_cycles",
+      "label": "Пик 3",
+      "value": 5,
+      "detail": "14 → 5; однозначно: 14 → 5; возраст [38, 47)"
+    },
+    {
+      "id": "num.pinnacle.4",
+      "section": "life_cycles",
+      "label": "Пик 4",
+      "value": 2,
+      "detail": "2; однозначно: 2; возраст [47, None)"
+    },
+    {
+      "id": "num.challenge.1",
+      "section": "life_cycles",
+      "label": "Вызов 1",
+      "value": 5
+    },
+    {
+      "id": "num.challenge.2",
+      "section": "life_cycles",
+      "label": "Вызов 2",
+      "value": 5
+    },
+    {
+      "id": "num.challenge.3",
+      "section": "life_cycles",
+      "label": "Вызов 3",
+      "value": 0
+    },
+    {
+      "id": "num.challenge.4",
+      "section": "life_cycles",
+      "label": "Вызов 4",
+      "value": 0
+    },
+    {
+      "id": "num.personal.year",
+      "section": "life_cycles",
+      "label": "Личный год",
+      "value": 8,
+      "detail": "17 → 8; однозначно: 17 → 8"
+    },
+    {
+      "id": "num.personal.month",
+      "section": "life_cycles",
+      "label": "Личный месяц",
+      "value": 1,
+      "detail": "19 → 10 → 1; однозначно: 19 → 10 → 1"
+    },
+    {
+      "id": "num.personal.day",
+      "section": "life_cycles",
+      "label": "Личный день",
+      "value": 6,
+      "detail": "6; однозначно: 6"
+    },
+    {
+      "id": "arch.1",
+      "section": "archetypes",
+      "label": "Простодушный",
+      "value": 5,
+      "detail": "Плотный ранг: 8; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.2",
+      "section": "archetypes",
+      "label": "Славный малый",
+      "value": 6,
+      "detail": "Плотный ранг: 7; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.3",
+      "section": "archetypes",
+      "label": "Герой",
+      "value": 8,
+      "detail": "Плотный ранг: 5; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.4",
+      "section": "archetypes",
+      "label": "Заботливый",
+      "value": 14,
+      "detail": "Плотный ранг: 1; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.5",
+      "section": "archetypes",
+      "label": "Искатель",
+      "value": 13,
+      "detail": "Плотный ранг: 2; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.6",
+      "section": "archetypes",
+      "label": "Бунтарь",
+      "value": 9,
+      "detail": "Плотный ранг: 4; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.7",
+      "section": "archetypes",
+      "label": "Любящий",
+      "value": 9,
+      "detail": "Плотный ранг: 4; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.8",
+      "section": "archetypes",
+      "label": "Творец",
+      "value": 7,
+      "detail": "Плотный ранг: 6; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.9",
+      "section": "archetypes",
+      "label": "Правитель",
+      "value": 8,
+      "detail": "Плотный ранг: 5; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.10",
+      "section": "archetypes",
+      "label": "Маг",
+      "value": 9,
+      "detail": "Плотный ранг: 4; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.11",
+      "section": "archetypes",
+      "label": "Мудрец",
+      "value": 7,
+      "detail": "Плотный ранг: 6; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "arch.12",
+      "section": "archetypes",
+      "label": "Шут",
+      "value": 11,
+      "detail": "Плотный ранг: 3; сумма трёх ответов, внешних норм нет."
+    },
+    {
+      "id": "hd.type",
+      "section": "human_design",
+      "label": "Тип",
+      "value": "Генератор",
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.authority",
+      "section": "human_design",
+      "label": "Авторитет",
+      "value": "Сакральный",
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.strategy",
+      "section": "human_design",
+      "label": "Стратегия",
+      "value": "Ждать отклика",
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.definition",
+      "section": "human_design",
+      "label": "Определение",
+      "value": "Единичное",
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.channels",
+      "section": "human_design",
+      "label": "Каналы",
+      "value": [
+        [
+          3,
+          60
+        ],
+        [
+          5,
+          15
+        ],
+        [
+          10,
+          57
+        ]
+      ],
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.centers",
+      "section": "human_design",
+      "label": "Определённые центры",
+      "value": [
+        "G-центр",
+        "Корень",
+        "Сакрал",
+        "Селезёнка"
+      ],
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.undefined_centers",
+      "section": "human_design",
+      "label": "Неопределённые центры",
+      "value": [
+        "Аджна",
+        "Голова",
+        "Горло",
+        "Солнечное сплетение",
+        "Эго"
+      ],
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.completely_open_centers",
+      "section": "human_design",
+      "label": "Полностью открытые центры",
+      "value": [],
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.profile",
+      "section": "human_design",
+      "label": "Профиль",
+      "value": "5/1",
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.quarter",
+      "section": "human_design",
+      "label": "Четверть",
+      "value": "Мутации",
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.cross",
+      "section": "human_design",
+      "label": "Ворота креста",
+      "value": {
+        "angle": "Левоугольный крест",
+        "gates": [
+          61,
+          62,
+          50,
+          3
+        ]
+      },
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.determination",
+      "section": "human_design",
+      "label": "Цвет и тон",
+      "value": {
+        "color": 4,
+        "tone": 5,
+        "name": "Прикосновение",
+        "notice": "Символическая классификация HD; не рекомендация по питанию или здоровью"
+      },
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.personality.sun",
+      "section": "human_design",
+      "label": "Личность: Солнце",
+      "value": {
+        "gate": 61,
+        "line": 5
+      },
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.personality.earth",
+      "section": "human_design",
+      "label": "Личность: Земля",
+      "value": {
+        "gate": 62,
+        "line": 5
+      },
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.design.sun",
+      "section": "human_design",
+      "label": "Дизайн: Солнце",
+      "value": {
+        "gate": 50,
+        "line": 1
+      },
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.design.earth",
+      "section": "human_design",
+      "label": "Дизайн: Земля",
+      "value": {
+        "gate": 3,
+        "line": 1
+      },
+      "detail": "Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "hd.design_date",
+      "section": "human_design",
+      "label": "Дата дизайна UTC",
+      "value": "1989-10-20T09:02:31.454258+00:00",
+      "detail": "Расчётный момент солнечной дуги 88° до рождения; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.sun.longitude",
+      "section": "astrology",
+      "label": "Солнце",
+      "value": 294.9510608771644,
+      "detail": "24°57' Козерог; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.moon.longitude",
+      "section": "astrology",
+      "label": "Луна",
+      "value": 165.9373948072296,
+      "detail": "15°56' Дева; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.mercury.longitude",
+      "section": "astrology",
+      "label": "Меркурий",
+      "value": 281.4336673585239,
+      "detail": "11°26' Козерог; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.venus.longitude",
+      "section": "astrology",
+      "label": "Венера",
+      "value": 300.76128676785015,
+      "detail": "0°46' Водолей; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.mars.longitude",
+      "section": "astrology",
+      "label": "Марс",
+      "value": 259.82023009460426,
+      "detail": "19°49' Стрелец; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.jupiter.longitude",
+      "section": "astrology",
+      "label": "Юпитер",
+      "value": 93.38070394693703,
+      "detail": "3°23' Рак; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.saturn.longitude",
+      "section": "astrology",
+      "label": "Сатурн",
+      "value": 287.2996673645006,
+      "detail": "17°18' Козерог; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.uranus.longitude",
+      "section": "astrology",
+      "label": "Уран",
+      "value": 276.6048294988478,
+      "detail": "6°36' Козерог; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.neptune.longitude",
+      "section": "astrology",
+      "label": "Нептун",
+      "value": 282.5607098173666,
+      "detail": "12°34' Козерог; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.pluto.longitude",
+      "section": "astrology",
+      "label": "Плутон",
+      "value": 227.42630104670252,
+      "detail": "17°26' Скорпион; Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.ascendant.longitude",
+      "section": "astrology",
+      "label": "Асцендент",
+      "value": 45.28447666575346,
+      "detail": "15°17' Телец; приближённая модель ASC/MC. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.midheaven.longitude",
+      "section": "astrology",
+      "label": "Середина неба",
+      "value": 285.8290583149751,
+      "detail": "15°50' Козерог; приближённая модель ASC/MC. Из hd.compute, см. полный расчёт и provenance."
+    }
+  ],
+  "warnings": [
+    "В карте на момент рождения есть положения рядом с границей между линиями — категориями Human Design; небольшая погрешность времени или модели может изменить такую категорию.",
+    "В карте для расчётной даты дизайна есть положения рядом с границей между линиями — категориями Human Design; небольшая погрешность времени или модели может изменить такую категорию.",
+    "Лунные узлы — точки пересечения орбиты Луны с эклиптикой — и угловые точки карты рассчитаны приближённо; точность положений планет не означает одинаковой точности всех показателей."
+  ],
+  "provenance": {
+    "arithmetic_convention": "arithmetic-v1",
+    "backend": "astronomy",
+    "validation_scope": "structure and references, not semantic review",
+    "ephemeris": {
+      "backend": "astronomy",
+      "engine_version": "2.1.19",
+      "coordinate_frame": "geocentric true ecliptic/equinox of date",
+      "planet_positions": "apparent: light-time and aberration",
+      "time_scale": "UTC approximates UT1; TT from engine Delta-T model",
+      "node_model": "mean node polynomial (approximate)",
+      "asc_mc_model": "legacy mean sidereal time and obliquity (approximate)",
+      "date_range_utc": "1800-01-01 inclusive to 2051-01-01 exclusive; birth and design",
+      "solar_arc_degrees": 88.0,
+      "design_utc_iso": "1989-10-20T09:02:31.454258+00:00",
+      "limitations": "HD/astrology are symbolic systems without established scientific validity; boundary assignments and color/tone are sensitive to time and model precision",
+      "deprecated_fields": {
+        "chart.open_centers": "alias of undefined_centers; use completely_open_centers for centers without active gates"
+      }
+    }
+  },
+  "calculation_id": "aa63f7d07869b3f3481bbd98efb56fc4e94b9521514c81117ba9f02b7557ad0a"
+}

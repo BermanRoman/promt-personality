@@ -6,9 +6,9 @@
 Считает всё сам: эфемериды планет, колесо ворот, каналы, центры,
 тип, авторитет, профиль, крест инкарнации, определение.
 
-Зависимости: только стандартная библиотека Python 3.9+.
+Зависимости: Python 3.9+, astronomy-engine==2.1.19 (requirements.txt).
 Запуск:
-    python3 hd.py --date 20.09.1997 --time 06:00 --tz Asia/Yekaterinburg --lat 58.0105 --lon 56.2502
+    python3 hd.py --date 15.01.1990 --time 12:00 --tz Europe/Moscow --lat 55.75 --lon 37.62
     python3 hd.py ... --json
 """
 
@@ -17,6 +17,8 @@ import json
 import math
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
+
+from personality_core.ephemeris import ENGINE_VERSION, longitude as engine_longitude
 
 D2R = math.pi / 180.0
 R2D = 180.0 / math.pi
@@ -34,7 +36,7 @@ def julian_day(dt_utc):
     """Юлианская дата из datetime в UTC."""
     y, m = dt_utc.year, dt_utc.month
     d = (dt_utc.day
-         + (dt_utc.hour + dt_utc.minute / 60.0 + dt_utc.second / 3600.0) / 24.0)
+         + (dt_utc.hour + dt_utc.minute / 60.0 + (dt_utc.second + dt_utc.microsecond / 1e6) / 3600.0) / 24.0)
     if m <= 2:
         y -= 1
         m += 12
@@ -188,8 +190,8 @@ def moon_longitude(jd):
     return norm360(lon)
 
 
-def node_longitude(jd, true_node=True):
-    """Лунный узел, градусы. По умолчанию истинный (как в софте HD)."""
+def node_longitude(jd, true_node=False):
+    """Mean polynomial node, or explicitly approximate truncated true node."""
     t = centuries(jd)
     omega_mean = (125.0445479 - 1934.1362891 * t
                   + 0.0020754 * t ** 2 + t ** 3 / 467441.0)
@@ -293,7 +295,7 @@ def _kepler_xyz(name, t):
 
 
 def planet_longitude(name, jd):
-    """Видимая геоцентрическая эклиптическая долгота планеты, градусы."""
+    """Legacy approximate longitude; no light-time or aberration correction."""
     t = centuries(jd)
     px, py, pz = _kepler_xyz(name, t)
     ex, ey, ez = _kepler_xyz("Земля", t)
@@ -304,7 +306,14 @@ def planet_longitude(name, jd):
     return norm360(lon_j2000 + precession + nutation_longitude(jd))
 
 
-def body_longitude(name, jd, true_node=True):
+def body_longitude(name, jd, true_node=False, backend="astronomy"):
+    validate_jd(jd)
+    if backend not in ("astronomy", "legacy"):
+        raise ValueError("backend must be astronomy or legacy")
+    if name == "Земля":
+        return norm360(body_longitude("Солнце", jd, true_node, backend) + 180.0)
+    if name not in ("Северный узел", "Южный узел") and backend == "astronomy":
+        return engine_longitude(name, jd)
     if name == "Солнце":
         return sun_longitude(jd)
     if name == "Земля":
@@ -498,12 +507,15 @@ def build_chart(activations):
     return {
         "channels": defined_channels,
         "defined_centers": sorted(defined_centers),
-        "open_centers": sorted(set(CENTERS) - defined_centers),
+        "undefined_centers": sorted(set(CENTERS) - defined_centers),
+        "completely_open_centers": sorted(c for c in CENTERS
+                                           if not active_gates.intersection(CENTERS[c])),
+        "open_centers": sorted(set(CENTERS) - defined_centers),  # Deprecated alias.
         "type": type_,
         "strategy": strategy,
         "authority": authority,
         "definition": definition,
-        "components": [sorted(c) for c in components],
+        "components": sorted(sorted(c) for c in components),
     }
 
 
@@ -535,6 +547,7 @@ def sidereal_time(jd, longitude_east):
 
 
 def ascendant_mc(jd, lat, lon):
+    validate_coordinates(lat, lon)
     theta = sidereal_time(jd, lon) * D2R
     eps = obliquity(jd) * D2R
     phi = lat * D2R
@@ -550,12 +563,10 @@ SIGNS = ["Овен", "Телец", "Близнецы", "Рак", "Лев", "Де
 
 
 def to_sign(longitude):
-    idx = int(norm360(longitude) // 30)
-    deg = norm360(longitude) - idx * 30
-    d = int(deg)
-    m = int(round((deg - d) * 60))
-    if m == 60:
-        d, m = d + 1, 0
+    # Round globally before choosing the sign, carrying 30 degrees and 360.
+    minutes = int(round(norm360(longitude) * 60.0)) % (360 * 60)
+    idx, within = divmod(minutes, 30 * 60)
+    d, m = divmod(within, 60)
     return f"{d}°{m:02d}' {SIGNS[idx]}"
 
 
@@ -563,38 +574,86 @@ def to_sign(longitude):
 # Дата дизайна: 88 градусов солнечной дуги до рождения
 # ---------------------------------------------------------------------------
 
-def design_jd(birth_jd):
-    target = norm360(sun_longitude(birth_jd) - 88.0)
-    jd = birth_jd - 88.0
-    for _ in range(50):
-        diff = norm360(sun_longitude(jd) - target)
-        if diff > 180.0:
-            diff -= 360.0
-        if abs(diff) < 1e-9:
-            break
-        jd -= diff / 0.9856
-    return jd
+MIN_JD = julian_day(datetime(1800, 1, 1, tzinfo=timezone.utc))
+MAX_JD = julian_day(datetime(2051, 1, 1, tzinfo=timezone.utc))
+
+
+def validate_jd(jd):
+    if not math.isfinite(jd) or not MIN_JD <= jd < MAX_JD:
+        raise ValueError("Birth and design dates must both be within 1800–2050 UTC")
+
+
+def design_jd(birth_jd, backend="astronomy"):
+    """Solve 88 degrees of solar arc by bracketed bisection, not 88 days."""
+    validate_jd(birth_jd)
+    birth_sun = body_longitude("Солнце", birth_jd, backend=backend)
+
+    def residual(jd):
+        return norm360(birth_sun - body_longitude("Солнце", jd, backend=backend)) - 88.0
+
+    lo, hi = max(MIN_JD, birth_jd - 100.0), max(MIN_JD, birth_jd - 70.0)
+    if not residual(lo) >= 0.0 >= residual(hi):
+        raise ValueError("Design date is outside 1800–2050 or solar arc is not bracketed")
+    for _ in range(64):
+        mid = (lo + hi) / 2.0
+        error = residual(mid)
+        if abs(error) < 1e-8:
+            return mid
+        if error > 0:
+            lo = mid
+        else:
+            hi = mid
+    raise RuntimeError("88-degree solar arc solver did not converge")
+
+
+def localize(dt_local, tz_name, fold=None):
+    """Reject missing/ambiguous wall times; fold is explicit only for repeats."""
+    if dt_local.tzinfo is not None:
+        raise ValueError("dt_local must be a naive local datetime; pass timezone separately")
+    if fold is not None and (type(fold) is not int or fold not in (0, 1)):
+        raise ValueError("fold must be 0 or 1")
+    tz = ZoneInfo(tz_name)
+    candidates = {}
+    for value in (0, 1):
+        aware = dt_local.replace(tzinfo=tz, fold=value)
+        back = aware.astimezone(timezone.utc).astimezone(tz)
+        if back.replace(tzinfo=None) == dt_local and back.fold == value:
+            candidates[value] = aware
+    if not candidates:
+        raise ValueError("Nonexistent local time (DST gap)")
+    if len(candidates) == 2 and fold is None:
+        raise ValueError("Ambiguous local time; explicitly provide fold=0 or fold=1")
+    if fold is not None and fold not in candidates:
+        raise ValueError("fold is not valid for this local time")
+    return candidates[fold if fold is not None else min(candidates)]
+
+
+def validate_coordinates(lat, lon):
+    if not math.isfinite(lat) or not -90 < lat < 90:
+        raise ValueError("latitude must be finite and strictly between -90 and 90 for ASC")
+    if not math.isfinite(lon) or not -180 <= lon <= 180:
+        raise ValueError("longitude must be finite and within [-180, 180]")
 
 
 # ---------------------------------------------------------------------------
 # Сборка
 # ---------------------------------------------------------------------------
 
-def compute(dt_local, tz_name, lat, lon, true_node=True):
-    tz = ZoneInfo(tz_name)
-    dt_aware = dt_local.replace(tzinfo=tz)
+def compute(dt_local, tz_name, lat, lon, true_node=False, fold=None, backend="astronomy"):
+    validate_coordinates(lat, lon)
+    dt_aware = localize(dt_local, tz_name, fold)
     dt_utc = dt_aware.astimezone(timezone.utc)
     offset_hours = dt_aware.utcoffset().total_seconds() / 3600.0
 
     p_jd = julian_day(dt_utc)
-    d_jd = design_jd(p_jd)
+    d_jd = design_jd(p_jd, backend)
 
     activations = {}
     personality = {}
     design = {}
 
     for body in BODIES:
-        lon_p = body_longitude(body, p_jd, true_node)
+        lon_p = body_longitude(body, p_jd, true_node, backend)
         g, l, frac = gate_line(lon_p)
         personality[body] = {"longitude": lon_p, "gate": g, "line": l,
                              "sign": to_sign(lon_p),
@@ -602,7 +661,7 @@ def compute(dt_local, tz_name, lat, lon, true_node=True):
         activations.setdefault(g, []).append(("Личность", body, l))
 
     for body in BODIES:
-        lon_d = body_longitude(body, d_jd, true_node)
+        lon_d = body_longitude(body, d_jd, true_node, backend)
         g, l, frac = gate_line(lon_d)
         design[body] = {"longitude": lon_d, "gate": g, "line": l,
                         "sign": to_sign(lon_d),
@@ -633,6 +692,23 @@ def compute(dt_local, tz_name, lat, lon, true_node=True):
             "utc_time": dt_utc.strftime("%d.%m.%Y %H:%M"),
             "lat": lat, "lon": lon,
             "node": "истинный" if true_node else "средний",
+            "fold": dt_aware.fold,
+            "local_iso": dt_aware.isoformat(),
+            "utc_iso": dt_utc.isoformat(),
+        },
+        "provenance": {
+            "backend": backend,
+            "engine_version": ENGINE_VERSION if backend == "astronomy" else None,
+            "coordinate_frame": "geocentric true ecliptic/equinox of date",
+            "planet_positions": "apparent: light-time and aberration" if backend == "astronomy" else "approximate legacy; no light-time/aberration",
+            "time_scale": "UTC approximates UT1; TT from engine Delta-T model" if backend == "astronomy" else "UTC used as dynamical time (approximate)",
+            "node_model": "truncated true node (approximate)" if true_node else "mean node polynomial (approximate)",
+            "asc_mc_model": "legacy mean sidereal time and obliquity (approximate)",
+            "date_range_utc": "1800-01-01 inclusive to 2051-01-01 exclusive; birth and design",
+            "solar_arc_degrees": 88.0,
+            "design_utc_iso": jd_to_datetime(d_jd).isoformat(),
+            "limitations": "HD/astrology are symbolic systems without established scientific validity; boundary assignments and color/tone are sensitive to time and model precision",
+            "deprecated_fields": {"chart.open_centers": "alias of undefined_centers; use completely_open_centers for centers without active gates"},
         },
         "design_date_utc": jd_to_datetime(d_jd).strftime("%d.%m.%Y %H:%M"),
         "personality": personality,
@@ -642,7 +718,8 @@ def compute(dt_local, tz_name, lat, lon, true_node=True):
         "chart": chart,
         "quarter": quarter,
         "determination": {"color": color, "tone": tone,
-                          "name": DETERMINATION[color]},
+                          "name": DETERMINATION[color],
+                          "notice": "Символическая классификация HD; не рекомендация по питанию или здоровью"},
         "astro": {"Асцендент": to_sign(asc), "Середина неба": to_sign(mc),
                   "asc_deg": asc, "mc_deg": mc},
     }
@@ -671,7 +748,9 @@ def render(res):
                f"{res['cross']['gates']}")
     out.append(f"ЧЕТВЕРТЬ:   {res['quarter']}")
     det = res["determination"]
-    out.append(f"ПИТАНИЕ:    {det['name']} (цвет {det['color']}, тон {det['tone']})")
+    out.append(f"ОПРЕДЕЛЕНИЕ HD: {det['name']} (цвет {det['color']}, тон {det['tone']})")
+    out.append(det["notice"])
+    out.append(f"ЭФЕМЕРИДЫ: {res['provenance']['backend']}; {res['provenance']['node_model']}")
     out.append(f"УЗЕЛ:       {inp['node']}")
     out.append("")
 
@@ -692,8 +771,9 @@ def render(res):
 
     out.append(f"ОПРЕДЕЛЁННЫЕ ЦЕНТРЫ ({len(ch['defined_centers'])}): "
                + ", ".join(ch["defined_centers"]))
-    out.append(f"ОТКРЫТЫЕ ЦЕНТРЫ ({len(ch['open_centers'])}): "
-               + ", ".join(ch["open_centers"]))
+    out.append(f"НЕОПРЕДЕЛЁННЫЕ ЦЕНТРЫ ({len(ch['undefined_centers'])}): "
+               + ", ".join(ch["undefined_centers"]))
+    out.append("ПОЛНОСТЬЮ ОТКРЫТЫЕ ЦЕНТРЫ: " + ", ".join(ch["completely_open_centers"]))
     out.append("")
     out.append(f"КАНАЛЫ ({len(ch['channels'])}): "
                + ", ".join(f"{a}-{b}" for a, b in ch["channels"]))
@@ -713,16 +793,22 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--date", required=True, help="ДД.ММ.ГГГГ")
     ap.add_argument("--time", required=True, help="ЧЧ:ММ (местное)")
-    ap.add_argument("--tz", required=True, help="Asia/Yekaterinburg")
+    ap.add_argument("--tz", required=True, help="Europe/Moscow")
     ap.add_argument("--lat", type=float, required=True)
     ap.add_argument("--lon", type=float, required=True)
     ap.add_argument("--node", choices=["true", "mean"], default="mean",
                     help="истинный или средний лунный узел")
+    ap.add_argument("--fold", type=int, choices=[0, 1], help="повтор местного времени: 0 первый, 1 второй")
+    ap.add_argument("--backend", choices=["astronomy", "legacy"], default="astronomy")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
 
-    dt = datetime.strptime(f"{a.date} {a.time}", "%d.%m.%Y %H:%M")
-    res = compute(dt, a.tz, a.lat, a.lon, true_node=(a.node == "true"))
+    try:
+        dt = datetime.strptime(f"{a.date} {a.time}", "%d.%m.%Y %H:%M")
+        res = compute(dt, a.tz, a.lat, a.lon, true_node=(a.node == "true"),
+                      fold=a.fold, backend=a.backend)
+    except (ValueError, KeyError, RuntimeError) as exc:
+        ap.error(str(exc))
     if a.json:
         print(json.dumps(res, ensure_ascii=False, indent=2))
     else:
