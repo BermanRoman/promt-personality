@@ -69,8 +69,12 @@
 
 ```sh
 .venv/bin/python personality.py check --calculation runs/calculation.json --narrative runs/narrative.json
-.venv/bin/python personality.py render --calculation runs/calculation.json --narrative runs/narrative.json --output runs/report.html
+.venv/bin/python personality.py render --calculation runs/calculation.json --narrative runs/narrative.json --site runs/report
 ```
+
+`--site` пишет папку страницы для сайта (`index.html`, `assets/`, `.htaccess`, `manifest.json`) и рядом `runs/report.zip`; `--output файл.html` — один автономный файл. Ровно один из двух ключей обязателен.
+
+`check` с интерпретацией дополнительно печатает предупреждения стиля, которые не блокируют выпуск: больше четырёх источников у абзаца, три абзаца подряд с одинаковым списком источников, превышение бюджета условности по главе (`references/interpretation.md`).
 
 Выходной файл должен отличаться от всех входных, включая символические ссылки и жёсткие ссылки на тот же файл.
 

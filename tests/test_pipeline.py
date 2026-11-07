@@ -251,3 +251,26 @@ class PipelineTests(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+
+
+class NarrativeWarningTests(unittest.TestCase):
+    def test_warnings_flag_bulk_sources_repeats_and_hedging(self):
+        from personality_core.pipeline import narrative_warnings
+        bulk = ["a", "b", "c", "d", "e"]
+        narrative = {"sections": {"numerology": {
+            "interpretation": [{"text": "Число пять.", "sources": bulk}],
+            "topics": [{"title": "Тема", "paragraphs": [{"text": "Возможно, можно проверить гипотезу.", "sources": ["x"]}] * 3}],
+        }}, "summary": [{"text": "Конкретный вывод.", "sources": ["y"]}]}
+        notes = narrative_warnings(narrative)
+        self.assertTrue(any("5 источниками" in n for n in notes))
+        self.assertTrue(any("три абзаца подряд" in n for n in notes))
+        self.assertTrue(any("маркеров условности" in n for n in notes))
+        clean = {"sections": {"numerology": {"interpretation": [{"text": "Жизненный путь 8 считают числом организатора. Он берётся за масштаб.", "sources": ["n"]}]}}, "summary": []}
+        self.assertEqual([], narrative_warnings(clean))
+
+    def test_reference_example_passes_check_without_style_warnings(self):
+        from personality_core.pipeline import narrative_warnings, validate_calculation, validate_narrative
+        root = Path(__file__).resolve().parent.parent / "examples"
+        calc = validate_calculation(load_json(root / "calculation.json"))
+        narrative = validate_narrative(calc, load_json(root / "narrative.json"))
+        self.assertEqual([], narrative_warnings(narrative))

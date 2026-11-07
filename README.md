@@ -6,7 +6,7 @@
 
 Исходные данные открыты в начале страницы, после восьми подробных глав идёт общий разбор с портретом, сильными сторонами, возможными напряжениями и приоритетными действиями.
 
-Вывод — автономная HTML-страница с таблицами, квадратом нумерологии, картой положений планет и диаграммой архетипов.
+Вывод — страница для сайта (папка `index.html` + `assets/` и zip-архив) или один автономный HTML-файл. На странице анимированные сцены: бодиграф, расчёт гематрии по буквам, ключевые числа, квадрат нумерологии, круг планет с осями, пики и вызовы, профиль архетипов.
 
 ## Быстрый запуск
 
@@ -18,7 +18,7 @@ python3 -m venv .venv
 mkdir -p runs/demo
 .venv/bin/python personality.py calculate --input examples/input.json --output runs/demo/calculation.json
 .venv/bin/python personality.py check --calculation runs/demo/calculation.json
-.venv/bin/python personality.py render --calculation runs/demo/calculation.json --output runs/demo/calculations.html
+.venv/bin/python personality.py render --calculation runs/demo/calculation.json --site runs/demo/site
 ```
 
 Это расчётный черновик, без выдуманной интерпретации.
@@ -69,7 +69,8 @@ mkdir -p runs/demo
 
 ```sh
 .venv/bin/python personality.py check --calculation runs/demo/calculation.json --narrative runs/demo/narrative.json
-.venv/bin/python personality.py render --calculation runs/demo/calculation.json --narrative runs/demo/narrative.json --output runs/demo/report.html
+.venv/bin/python personality.py render --calculation runs/demo/calculation.json --narrative runs/demo/narrative.json --site runs/demo/site
+# или один файл: --output runs/demo/report.html
 ```
 
 Нельзя просто перенести готовую интерпретацию на другой расчёт: проверка отклонит чужой идентификатор или отсутствующий источник.
@@ -103,7 +104,7 @@ Astronomy Engine 2.1.19 используется по умолчанию; пре
 
 Выразительные заголовки с засечками сочетаются с простым шрифтом основного текста; используются локальные системные шрифты без внешних запросов.
 
-Есть оглавление, доступные с клавиатуры ссылки и таблицы, стили для печати; JavaScript не требуется.
+Есть оглавление, доступные с клавиатуры ссылки и таблицы, тёмная тема и стили для печати. Анимации сцен работают через небольшой локальный scenes.js; без него, при «уменьшить движение» и в печати видна полностью нарисованная графика.
 
 На странице стоит noindex, но это не контроль доступа и не пароль.
 

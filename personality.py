@@ -20,7 +20,9 @@ def main(argv=None):
         command.add_argument('--calculation',required=True)
         command.add_argument('--narrative')
         if name=='render':
-            command.add_argument('--output',required=True)
+            target=command.add_mutually_exclusive_group(required=True)
+            target.add_argument('--output',help='Один автономный HTML-файл (стили и сцены внутри)')
+            target.add_argument('--site',help='Папка страницы для сайта: index.html, assets/, .htaccess, manifest.json и рядом .zip')
     compact=commands.add_parser('summary',help='Print compact facts without raw activations')
     compact.add_argument('--calculation',required=True)
     commands.add_parser('questionnaire',help='Print 36 questions without the scoring key')
@@ -52,13 +54,25 @@ def main(argv=None):
             narrative=validate_narrative(result,load_json(args.narrative))
         if args.command=='check':
             print('Структура, идентификатор и связи проверены. Семантическая вычитка не выполнялась.')
+            if narrative is not None:
+                from personality_core.pipeline import narrative_warnings
+                notes=narrative_warnings(narrative)
+                if notes:
+                    print('Предупреждения стиля (не блокируют выпуск): '+str(len(notes)))
+                    for note in notes:
+                        print('- '+note)
         elif args.command=='summary':
             print(json.dumps(summary(result),ensure_ascii=False,indent=2,allow_nan=False))
         else:
-            from personality_core.report import render_report
             protected=[args.calculation]+([args.narrative] if args.narrative else [])
-            write_atomic(args.output,render_report(result,narrative),protected)
-            print('Отчёт сохранён: '+str(args.output))
+            if args.site:
+                from personality_core.package import write_site
+                folder,archive=write_site(args.site,result,narrative,tuple(protected))
+                print('Страница для сайта: '+str(folder)+'\nАрхив: '+str(archive))
+            else:
+                from personality_core.report import render_report
+                write_atomic(args.output,render_report(result,narrative),protected)
+                print('Отчёт сохранён: '+str(args.output))
         return 0
     except (ValueError,TypeError,KeyError,OSError,RuntimeError,OverflowError) as exc:
         print('Ошибка: '+str(exc),file=sys.stderr)

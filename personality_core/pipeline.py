@@ -420,6 +420,41 @@ def validate_narrative(calculation,narrative):
     return narrative
 
 
+HEDGES=re.compile(r'(?i)\b(возможн\w*|можно|провер\w*|гипотез\w*|символическ\w*|предлагает)\b')
+
+
+def narrative_warnings(narrative):
+    """Style warnings for the reviewer; they never block check or render."""
+    warnings=[]
+    def blocks(section_key,section):
+        yield section_key+' interpretation',[section.get('interpretation') or []]
+        for topic in section.get('topics') or []:
+            yield section_key+' / '+str(topic.get('title','')),[topic.get('paragraphs') or []]
+    parts=[(key,dict(sections)) for key,sections in (narrative.get('sections') or {}).items()]
+    parts.append(('summary',{'interpretation':narrative.get('summary') or [],'topics':narrative.get('summary_topics') or []}))
+    for key,section in parts:
+        text=[]
+        for label,groups in blocks(key,section):
+            for items in groups:
+                run=0
+                previous=None
+                for item in items:
+                    sources=item.get('sources') or []
+                    text.append(str(item.get('text','')))
+                    if len(sources)>4:
+                        warnings.append(f'{label}: абзац с {len(sources)} источниками (больше 4) — оставьте 1–3, прямо подтверждающих фразу')
+                    run=run+1 if sources and sources==previous else 1
+                    previous=sources
+                    if run==3:
+                        warnings.append(f'{label}: три абзаца подряд с одинаковым списком источников')
+        joined=' '.join(text)
+        sentences=max(1,len(re.findall(r'[.!?…](?:\s|$)',joined)))
+        hedges=len(HEDGES.findall(joined))
+        if hedges*3>sentences:
+            warnings.append(f'{key}: маркеров условности {hedges} на {sentences} предложений — больше бюджета (1 на 3)')
+    return warnings
+
+
 def summary(calculation):
     validate_calculation(calculation)
     return {'schema_version':SCHEMA_VERSION,'calculation_id':calculation['calculation_id'],'as_of':calculation['as_of'],

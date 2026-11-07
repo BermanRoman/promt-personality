@@ -3,7 +3,7 @@
 import unittest
 from html.parser import HTMLParser
 
-from personality_core.report import DISCLAIMER, SECTIONS, render_report
+from personality_core.report import ASSETS, DISCLAIMER, MOTION_BOOT, SECTIONS, render_report
 
 
 class Document(HTMLParser):
@@ -42,7 +42,8 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("Что можно попробовать", report)
         self.assertIn("Исходная строка\nс переносом", report)
         self.assertNotIn("[5, 5, 5", report)
-        self.assertTrue(report.endswith(f'<footer><p>{DISCLAIMER}</p></footer></main></body></html>'))
+        self.assertIn(f'<footer><p>{DISCLAIMER}</p></footer></main>', report)
+        self.assertTrue(report.endswith('</script></body></html>'))
 
     def test_absent_and_unavailable_sections_explain_why(self):
         calc = calculation()
@@ -101,9 +102,13 @@ class ReportTests(unittest.TestCase):
         narrative = {"sections": {"human_design": {"intro": malicious, "topics": [topic], "interpretation": [{"text": malicious, "sources": [malicious]}], "actions": [{"text": malicious, "sources": [malicious]}]}}, "summary": [{"text": malicious, "sources": [malicious]}], "summary_topics": [topic]}
         report = render_report(calc, narrative)
         doc = Document(report)
-        self.assertNotIn("<script>", report)
+        self.assertNotIn(malicious, report)
+        self.assertNotIn("<script>alert", report)
         self.assertIn("&lt;script&gt;", report)
-        self.assertFalse(any(tag in {"script", "img", "iframe", "object"} for tag, _ in doc.elements))
+        # Only our own scripts: the motion boot in <head> and assets/scenes.js before </body>.
+        scripts = [part.split("</script>", 1)[0] for part in report.split("<script>")[1:]]
+        self.assertEqual([MOTION_BOOT, (ASSETS / "scenes.js").read_text(encoding="utf-8")], scripts)
+        self.assertFalse(any(tag in {"img", "iframe", "object"} for tag, _ in doc.elements))
         self.assertFalse(any(key.startswith("on") for _, attrs in doc.elements for key in attrs))
 
     def test_no_network_resources_or_javascript(self):
@@ -157,12 +162,12 @@ class ReportTests(unittest.TestCase):
         calc["facts"] += [{"id": f"arch.{i}", "section": "archetypes", "label": f"Архетип {i}", "value": i} for i in range(1, 13)]
         calc["facts"] += [{"id": "astro.sun.longitude", "section": "astrology", "label": "Солнце", "value": 135.5}]
         report = render_report(calc)
-        self.assertEqual(9, report.count('class="matrix-cell"'))
-        self.assertEqual(12, report.count('class="bar-fill"'))
+        self.assertEqual(9, report.count('class="matrix-cell'))
+        self.assertEqual(12, report.count('class="bar-fill'))
         self.assertIn("135.5°", report)
         self.assertIn('<svg class="chart zodiac-chart"', report)
         self.assertIn("без домов и аспектов", report)
-        self.assertNotIn("бодиграф", report.lower())
+        self.assertNotIn('class="graphic scene hd-graphic"', report)
 
     def test_missing_invalid_or_cross_section_graphics_not_fabricated(self):
         calc = calculation()
@@ -170,8 +175,8 @@ class ReportTests(unittest.TestCase):
         report = render_report(calc)
         self.assertNotIn('<svg class="chart zodiac-chart"', report)
         self.assertNotIn('<svg class="chart longitude-scale"', report)
-        self.assertNotIn('class="matrix-cell"', report)
-        self.assertNotIn('class="bar-fill"', report)
+        self.assertNotIn('class="matrix-cell', report)
+        self.assertNotIn('class="bar-fill', report)
 
     def test_gematria_preserves_letter_details_without_recalculation(self):
         calc = calculation()
@@ -184,17 +189,18 @@ class ReportTests(unittest.TestCase):
     def test_responsive_print_and_keyboard_access(self):
         report = render_report(calculation())
         self.assertIn("@media print", report)
-        self.assertIn("@media(max-width:480px)", report)
-        self.assertIn("overflow-x:auto", report)
+        self.assertIn("@media (max-width: 480px)", report)
+        self.assertIn("overflow-x: auto", report)
         self.assertIn("focus-visible", report)
-        self.assertIn("font:20px system-ui,sans-serif", report)
-        self.assertIn("--paper:#faf7f2", report)
-        self.assertIn("--accent:#493447", report)
-        self.assertIn("--rose:#bc8f9b", report)
-        self.assertIn('--serif:Georgia,"Times New Roman",serif', report)
+        self.assertIn("--fs-m: 1.1875rem", report)
+        self.assertIn("--paper: #faf7f2", report)
+        self.assertIn("--accent: #493447", report)
+        self.assertIn("--rose: #bc8f9b", report)
+        self.assertIn("prefers-reduced-motion: reduce", report)
+        self.assertIn("prefers-color-scheme: dark", report)
         self.assertIn('tabindex="0"', report)
         self.assertIn('<details class="fact-details">', report)
-        self.assertIn('details::details-content{content-visibility:visible', report)
+        self.assertIn('details::details-content { content-visibility: visible', report)
         self.assertIn('aria-label="Оглавление"', report)
         self.assertNotIn('"answers"', report)
 
@@ -298,12 +304,12 @@ class ReportTests(unittest.TestCase):
         self.assertIn("0 включительно · 36 не включается", cycles)
         self.assertIn("От 54 лет", cycles)
         self.assertIn("Без верхней границы", cycles)
-        self.assertIn('aria-current="step"><span class="period-index">01', cycles)
+        self.assertRegex(cycles, r'aria-current="step" style="[^"]*"><span class="period-index">01')
         self.assertIn('>11</a>', cycles)
         self.assertEqual(1, cycles.count('aria-current="step"'))
         calc["as_of"] = "2026-11-06"
         report = render_report(calc)
-        self.assertIn('aria-current="step"><span class="period-index">02', report)
+        self.assertRegex(report, r'aria-current="step" style="[^"]*"><span class="period-index">02')
         self.assertEqual(11, peaks[0]["number"]["master"])
 
     def test_astrology_has_zodiac_scale_and_non_crossing_numbered_markers(self):
@@ -316,7 +322,7 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(12, report.count('<text class="zodiac-label"'))
         for label in ("Овн", "Тел", "Блз", "Рак", "Лев", "Дев", "Вес", "Скр", "Стр", "Коз", "Вод", "Рыб"):
             self.assertIn(f'>{label}</text>', report)
-        self.assertIn('.chart text.zodiac-label{font-size:20px;fill:var(--accent);stroke:none}', report)
+        self.assertIn('.chart text.zodiac-label { font-size: 15px;', report)
         self.assertFalse(any(0x2648 <= ord(character) <= 0x2653 for character in report))
         self.assertEqual(10, report.count('<circle class="planet-marker"'))
         self.assertNotIn('class="planet-line"', report)
@@ -329,6 +335,86 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(10, dense.count('<span class="planet-index">'))
         self.assertNotIn('class="planet-line"', dense)
 
+    def test_bodygraph_draws_existing_chart_only(self):
+        calc = calculation()
+        calc["modules"]["human_design"]["data"] = {"chart": {"channels": [[3, 60], [10, 57]], "defined_centers": ["Сакрал", "Корень", "G-центр", "Селезёнка"]}}
+        report = render_report(calc)
+        self.assertIn('class="graphic scene hd-graphic"', report)
+        self.assertEqual(2, report.count('class="hd-channel s-draw"'))
+        self.assertEqual(4, report.count('class="hd-center defined'))
+        self.assertEqual(5, report.count('class="hd-center open'))
+        self.assertIn("Канал 3–60", report)
+        calc["modules"]["human_design"]["data"]["chart"]["channels"] = [[3, 999]]
+        self.assertNotIn('class="graphic scene hd-graphic"', render_report(calc))
+
+    def test_scenes_have_final_frame_without_javascript(self):
+        calc = calculation()
+        calc["facts"] += [{"id": f"arch.{i}", "section": "archetypes", "label": f"Архетип {i}", "value": i} for i in range(1, 13)]
+        report = render_report(calc)
+        # Hidden start frames exist only under .gm (set by script) and before .in.
+        css = (ASSETS / "report.css").read_text(encoding="utf-8")
+        for rule in css.split("}"):
+            if "opacity: 0" in rule or "scaleX(0)" in rule or "stroke-dashoffset: var(--len)" in rule.split("{")[-1]:
+                selector = rule.split("{")[0]
+                if ".s-" in selector or ".has .cell-fill" in selector:
+                    self.assertIn(".gm .scene:not(.in)", selector)
+        self.assertIn('class="graphic scene"', report)
+
+    def test_external_assets_are_versioned_links(self):
+        report = render_report(calculation(), assets="external")
+        self.assertRegex(report, r'<link rel="stylesheet" href="assets/report\.css\?v=[0-9a-f]{10}">')
+        self.assertRegex(report, r'<script src="assets/scenes\.js\?v=[0-9a-f]{10}" defer></script>')
+        self.assertNotIn("<style>", report)
+        with self.assertRaises(ValueError):
+            render_report(calculation(), assets="cdn")
+
+    def test_site_archive_contains_page_assets_and_manifest(self):
+        import json
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from personality_core.package import write_site
+        with tempfile.TemporaryDirectory() as tmp:
+            folder, archive = write_site(Path(tmp) / "page", calculation())
+            names = sorted(p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file())
+            self.assertEqual([".htaccess", "assets/report.css", "assets/scenes.js", "index.html", "manifest.json"], names)
+            manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual("test-calculation", manifest["calculation_id"])
+            self.assertEqual(set(names) - {"manifest.json"}, set(manifest["files"]))
+            with zipfile.ZipFile(archive) as z:
+                self.assertEqual(sorted("page/" + n for n in names), sorted(z.namelist()))
+            first = archive.read_bytes()
+            write_site(Path(tmp) / "page", calculation())
+            self.assertEqual(first, archive.read_bytes())
+            with self.assertRaises(ValueError):
+                write_site(Path(tmp), calculation(), protected_paths=(str(Path(tmp) / "calc.json"),))
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SiteSafetyTests(unittest.TestCase):
+    def test_refuses_to_overwrite_foreign_folder(self):
+        import tempfile
+        from pathlib import Path
+        from personality_core.package import write_site
+        with tempfile.TemporaryDirectory() as tmp:
+            foreign = Path(tmp) / "docs"
+            foreign.mkdir()
+            (foreign / "thesis.txt").write_text("важно", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                write_site(foreign, calculation())
+            self.assertEqual("важно", (foreign / "thesis.txt").read_text(encoding="utf-8"))
+            page, _ = write_site(Path(tmp) / "page", calculation())
+            write_site(page, calculation())  # own previous release is replaced
+
+    def test_unstable_bodygraph_is_not_drawn(self):
+        calc = calculation()
+        calc["modules"]["human_design"]["data"] = {
+            "chart": {"channels": [[3, 60]], "defined_centers": ["Сакрал", "Корень"]},
+            "time_window": {"varied": ["human_design.channels"]},
+        }
+        report = render_report(calc)
+        self.assertNotIn('class="graphic scene hd-graphic"', report)
+        self.assertIn("Бодиграф не показан", report)

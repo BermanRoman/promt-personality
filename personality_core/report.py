@@ -2,10 +2,20 @@
 
 from __future__ import annotations
 
+import hashlib
 import math
 from datetime import date
 from html import escape
 from pathlib import Path
+
+from . import scenes
+
+ASSETS = Path(__file__).resolve().parent.parent / "assets"
+# Добавляет класс движения до первой отрисовки; если scenes.js не загрузился, через 3 секунды
+# класс снимается и все сцены остаются в финальном кадре.
+MOTION_BOOT = ("(function(r){if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)"
+               "&&'IntersectionObserver' in window){r.classList.add('gm');setTimeout(function(){"
+               "if(!window.__personalityScenes)r.classList.remove('gm')},3000)}})(document.documentElement);")
 
 
 SECTIONS = (
@@ -39,8 +49,8 @@ ORBITAL_ART = ('<div class="hero-art" aria-hidden="true"><svg viewBox="0 0 400 4
                '<circle class="orbit-halo" cx="200" cy="220" r="157"/>'
                '<circle class="orbit-ring" cx="200" cy="220" r="157"/>'
                '<circle class="orbit-ring inner" cx="200" cy="220" r="129"/>'
-               '<ellipse class="orbit-path" cx="200" cy="220" rx="183" ry="67" transform="rotate(-36 200 220)"/>'
-               '<ellipse class="orbit-path faint" cx="200" cy="220" rx="180" ry="87" transform="rotate(42 200 220)"/>'
+               '<g class="orbit-spin"><ellipse class="orbit-path" cx="200" cy="220" rx="183" ry="67" transform="rotate(-36 200 220)"/></g>'
+               '<g class="orbit-spin slow"><ellipse class="orbit-path faint" cx="200" cy="220" rx="180" ry="87" transform="rotate(42 200 220)"/></g>'
                '<circle class="orbit-moon" cx="200" cy="220" r="69"/>'
                '<path class="orbit-crescent" d="M 224 155 A 69 69 0 1 0 224 285 A 83 83 0 0 1 224 155"/>'
                '<circle class="orbit-dot" cx="320" cy="119" r="7"/>'
@@ -173,7 +183,7 @@ def _cycles(module: dict, facts: dict[str, dict], anchors: dict[str, str], input
         challenge = ""
         if isinstance(challenges, list) and len(challenges) >= index:
             challenge = '<span>Вызов <strong>' + sourced_value(f"num.challenge.{index}", challenges[index - 1]) + '</strong></span>'
-        periods.append('<li' + (' class="current-period" aria-current="step"' if current_period else '') + '>'
+        periods.append('<li class="s-in' + (' current-period" aria-current="step"' if current_period else '"') + f' style="--k:0;--j:{index - 1}">'
                        f'<span class="period-index">{index:02d}</span><div class="period-body">'
                        '<h4>' + _e(interval) + '</h4><p class="period-boundary">' + _e(precise) + '</p>'
                        '<div class="period-values"><span>Пик <strong>' + sourced_value(f"num.pinnacle.{index}", number["master"]) + '</strong></span>' + challenge + '</div>'
@@ -181,7 +191,7 @@ def _cycles(module: dict, facts: dict[str, dict], anchors: dict[str, str], input
     if not periods:
         return ""
     age_label = f'<p class="cycle-age">Возраст на {_e(as_of)}: {_e(age)} полных лет.</p>' if age is not None else ""
-    return '<figure class="graphic cycle-graphic"><h3>Пики и вызовы по периодам</h3>' + age_label + '<ol class="cycle-timeline">' + "".join(periods) + '</ol><figcaption>Возрастные интервалы взяты из расчёта. Это условная схема периодов для размышления, а не прогноз событий.</figcaption></figure>'
+    return '<figure class="graphic scene cycle-graphic"><h3>Пики и вызовы по периодам</h3>' + age_label + '<ol class="cycle-timeline">' + "".join(periods) + '</ol><figcaption>Возрастные интервалы взяты из расчёта. Это условная схема периодов для размышления, а не прогноз событий.</figcaption></figure>'
 
 
 def _number(fact: dict | None) -> float | None:
@@ -222,17 +232,22 @@ def _parameters(facts: dict[str, dict], anchors: dict[str, str], keys: tuple[str
     return '<dl class="parameter-strip">' + "".join(items) + '</dl>' if items else ""
 
 
-def _matrix(facts: dict[str, dict], anchors: dict[str, str]) -> str:
+def _matrix(facts: dict[str, dict], anchors: dict[str, str], module: dict | None = None) -> str:
     cells = []
-    for digit in (1, 4, 7, 2, 5, 8, 3, 6, 9):
+    for order, digit in enumerate((1, 4, 7, 2, 5, 8, 3, 6, 9)):
         key = f"num.matrix.{digit}"
         fact = facts.get(key)
         count = _number(fact)
         if count is None or count < 0 or int(count) != count:
             return ""
-        cells.append(f'<a class="matrix-cell" href="#{anchors[key]}"><strong>{_e(count)}</strong>'
-                     f'<span>Цифра {digit}: количество</span></a>')
-    return '<figure class="graphic"><h3>Квадрат нумерологии</h3><div class="matrix">' + "".join(cells) + '</div><figcaption>В ячейках показано количество цифр из расчёта.</figcaption></figure>'
+        count = int(count)
+        marks = str(digit) * count if 0 < count <= 6 else (f"{digit}×{count}" if count else "—")
+        cells.append(f'<a class="matrix-cell{" has" if count else ""}" href="#{anchors[key]}">'
+                     f'<span class="cell-fill s-in" style="--k:2;--j:{order}" aria-hidden="true"></span>'
+                     f'<strong class="s-in s-pop" style="--k:2;--j:{order}">{_e(marks)}</strong>'
+                     f'<span class="cell-label">Цифра {digit}: {_e(count)}</span></a>')
+    grid = '<div class="matrix">' + "".join(cells) + '</div>'
+    return scenes.square((module or {}).get("data", {}), grid)
 
 
 def _bars(facts: dict[str, dict], anchors: dict[str, str]) -> str:
@@ -242,12 +257,13 @@ def _bars(facts: dict[str, dict], anchors: dict[str, str]) -> str:
         return ""
     maximum = max(_number(fact) for _, fact in values) or 1
     bars = []
-    for key, fact in values:
+    for order, (key, fact) in enumerate(values):
         score = _number(fact)
         width = score / maximum * 100
-        bars.append(f'<li><div class="bar-label"><a href="#{anchors[key]}">{_e(fact.get("label", key))}</a><span>{_e(score)}</span></div>'
-                    f'<div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:{width:.4f}%"></div></div></li>')
-    return '<figure class="graphic"><h3>Профиль архетипов</h3><ul class="bars">' + "".join(bars) + '</ul><figcaption>Длина полосы относительно максимального балла в этом профиле; числа — исходные баллы.</figcaption></figure>'
+        lead = " lead" if score == maximum else ""
+        bars.append(f'<li class="s-in{lead}" style="--k:0;--j:{order}"><div class="bar-label"><a href="#{anchors[key]}">{_e(fact.get("label", key))}</a><span>{_e(score)}</span></div>'
+                    f'<div class="bar-track" aria-hidden="true"><div class="bar-fill s-grow" style="width:{width:.4f}%;--k:1;--j:{order}"></div></div></li>')
+    return '<figure class="graphic scene"><h3>Профиль архетипов</h3><ul class="bars">' + "".join(bars) + '</ul><figcaption>Длина полосы относительно максимального балла в этом профиле; числа — исходные баллы.</figcaption></figure>'
 
 
 def _astrology(facts: dict[str, dict], anchors: dict[str, str]) -> str:
@@ -279,7 +295,7 @@ def _astrology(facts: dict[str, dict], anchors: dict[str, str]) -> str:
         outer_x, outer_y = polar(longitude, 181)
         degree_x, degree_y = polar(longitude, 202)
         sign_x, sign_y = polar(longitude + 15, 161)
-        sectors.append(f'<g><title>{_e(name)}: {longitude}–{longitude + 30}°</title>'
+        sectors.append(f'<g class="s-in" style="--k:0;--j:{index}"><title>{_e(name)}: {longitude}–{longitude + 30}°</title>'
                        f'<line x1="{inner_x:.3f}" y1="{inner_y:.3f}" x2="{outer_x:.3f}" y2="{outer_y:.3f}"/>'
                        f'<text class="degree-label" x="{degree_x:.3f}" y="{degree_y:.3f}" text-anchor="middle" dominant-baseline="central">{longitude}°</text>'
                        f'<text class="zodiac-label" x="{sign_x:.3f}" y="{sign_y:.3f}" text-anchor="middle" dominant-baseline="central">{abbreviation}</text></g>')
@@ -297,13 +313,27 @@ def _astrology(facts: dict[str, dict], anchors: dict[str, str]) -> str:
             break
         x, y = chosen
         occupied.append(chosen)
-        markers.append(f'<g><circle class="planet-marker" cx="{x:.3f}" cy="{y:.3f}" r="12"/>'
+        markers.append(f'<g class="s-in s-pop" style="--k:2;--j:{index}"><circle class="planet-marker" cx="{x:.3f}" cy="{y:.3f}" r="12"/>'
                        f'<text class="planet-number" x="{x:.3f}" y="{y:.3f}" text-anchor="middle" dominant-baseline="central">{index}</text></g>')
+    axes = []
+    axis_names = []
+    for step, (key, label, short) in enumerate((("astro.ascendant.longitude", "Асцендент", "Асц"),
+                                              ("astro.midheaven.longitude", "Середина неба", "MC"))):
+        axis = _number(facts.get(key))
+        if axis is None or not 0 <= axis < 360:
+            continue
+        x1, y1 = polar(axis, 140)
+        x2, y2 = polar(axis + 180, 140)
+        tx, ty = polar(axis, 151)
+        axes.append(f'<g class="axis"><line class="axis-line s-draw" x1="{x1:.3f}" y1="{y1:.3f}" x2="{x2:.3f}" y2="{y2:.3f}" '
+                    f'style="--len:281;--k:1;--j:{step * 3}"/><text class="axis-label s-in" x="{tx:.3f}" y="{ty:.3f}" '
+                    f'text-anchor="middle" dominant-baseline="central" style="--k:1.6;--j:{step * 3}">{short}</text></g>')
+        axis_names.append(f'{label} — <a href="#{anchors[key]}">{_e(_longitude_text(axis))}°</a> (приближённо)')
     if len(markers) == len(positions):
         graphic = ('<svg class="chart zodiac-chart" viewBox="0 0 440 440" role="img" aria-labelledby="astro-chart-title astro-chart-desc">'
                    '<title id="astro-chart-title">Круг эклиптических долгот</title>'
-                   '<desc id="astro-chart-desc">Двенадцать знаков по 30 градусов. Нумерованные планеты читаются по легенде ниже; расстояние от центра не несёт астрологического значения. Дома и аспекты не показаны.</desc>'
-                   + rings + ''.join(sectors) + ''.join(markers) + '</svg>')
+                   '<desc id="astro-chart-desc">Двенадцать знаков по 30 градусов. Нумерованные планеты читаются по легенде ниже; расстояние от центра не несёт астрологического значения. Оси Асцендента и MC приближённые, дома и аспекты не показаны.</desc>'
+                   + rings + ''.join(sectors) + ''.join(axes) + ''.join(markers) + '</svg>')
         instruction = 'Шкала идёт от 0° до 360° против часовой стрелки. Номер на карте соответствует планете в легенде; радиальные дорожки разделяют близкие положения.'
     else:
         # A dense conjunction can exceed all radial lanes: keep every point legible.
@@ -312,8 +342,9 @@ def _astrology(facts: dict[str, dict], anchors: dict[str, str]) -> str:
         dots = ''.join(f'<g><text x="12" y="{60 + (index - 1) * 34}" text-anchor="middle">{index}</text><line x1="40" x2="400" y1="{55 + (index - 1) * 34}" y2="{55 + (index - 1) * 34}"/><circle class="planet" cx="{40 + longitude:.3f}" cy="{55 + (index - 1) * 34}" r="5"/></g>' for index, longitude in positions)
         graphic = ('<svg class="chart longitude-scale" viewBox="0 0 440 ' + str(55 + len(positions) * 34) + '" role="img" aria-label="Долготы планет от нуля до 360 градусов, номера соответствуют легенде">' + stripes + ticks + dots + '</svg>')
         instruction = 'Близкие положения показаны на отдельных строках шкалы 0–360°, чтобы подписи оставались читаемыми. Одна полоса соответствует 30°; номера читаются по легенде.'
-    return ('<figure class="graphic astrology-graphic"><h3>Планеты в зодиакальном круге</h3>' + graphic
-            + '<p class="chart-instruction">' + instruction + '</p><ol class="planet-legend">' + ''.join(legend) + '</ol>'
+    axes_note = '<p class="chart-instruction">Оси: ' + '; '.join(axis_names) + '.</p>' if axis_names and len(markers) == len(positions) else ''
+    return ('<figure class="graphic scene astrology-graphic"><h3>Планеты в зодиакальном круге</h3>' + graphic
+            + '<p class="chart-instruction">' + instruction + '</p>' + axes_note + '<ol class="planet-legend">' + ''.join(legend) + '</ol>'
             + '<figcaption>Схема долгот без домов и аспектов. В легенде указаны знаки и общая долгота от начала Овна; это отображение готовых расчётных положений.</figcaption>'
             + '<details class="chart-details"><summary>Таблица положений планет</summary>'
             + _table(("№", "Планета", "Знак", "Общая долгота"), rows, "Положения планет в градусах") + '</details></figure>')
@@ -335,13 +366,26 @@ def _gematria(module: dict) -> str:
     return '<details class="calculation-details"><summary>Буквенный расчёт</summary>' + "".join(tables) + '</details>' if tables else ""
 
 
-def render_report(calculation: dict, narrative: dict | None = None) -> str:
-    """Render trusted calculation structure and escaped text without network or JS.
+def _centers_by_gate():
+    """Gate → center lookup from the calculation core; None if hd.py is not importable."""
+    try:
+        import hd
+    except ImportError:
+        return None
+    return hd.center_of_gate
+
+
+def render_report(calculation: dict, narrative: dict | None = None, *, assets: str = "inline") -> str:
+    """Render trusted calculation structure and escaped text without network requests.
+
+    assets="inline" embeds report.css and scenes.js into one offline file; assets="external" links
+    assets/report.css and assets/scenes.js for the site archive (see package.write_site).
 
     Calculation/narrative validation and their identity binding belong to the caller.
     Unknown source references are suppressed defensively; fact IDs never become HTML IDs.
     """
-    css = (Path(__file__).resolve().parent.parent / "assets" / "report.css").read_text(encoding="utf-8")
+    if assets not in {"inline", "external"}:
+        raise ValueError("assets must be inline or external")
     facts = [fact for fact in calculation.get("facts", []) if isinstance(fact, dict) and isinstance(fact.get("id"), str)]
     anchors = {fact["id"]: f"fact-{index}" for index, fact in enumerate(facts, 1)}
     inputs = calculation.get("input", {})
@@ -393,14 +437,26 @@ def render_report(calculation: dict, narrative: dict | None = None) -> str:
         if available:
             if key == "human_design":
                 body += _parameters(local_facts, anchors, ("hd.type", "hd.authority", "hd.profile"))
+                lookup = _centers_by_gate()
+                data = module.get("data", {})
+                chart = data.get("chart", {})
+                window = data.get("time_window") if isinstance(data.get("time_window"), dict) else {}
+                varied = window.get("varied") if isinstance(window.get("varied"), list) else []
+                if any(item in varied for item in ("human_design.channels", "human_design.defined_centers")):
+                    body += ('<p class="status">Бодиграф не показан: в пределах окна приблизительного времени '
+                             'меняются каналы или определённые центры.</p>')
+                elif lookup and isinstance(chart, dict):
+                    body += scenes.bodygraph(chart, lookup)
             elif key == "numerology":
-                body += _matrix(local_facts, anchors)
+                labels = {k: local_facts[f"num.{k}"].get("label", k) for k, _ in scenes.KEY_NUMBERS if f"num.{k}" in local_facts}
+                body += scenes.key_numbers(module.get("data", {}), labels) + _matrix(local_facts, anchors, module)
             elif key == "archetypes":
                 body += _bars(local_facts, anchors)
             elif key == "astrology":
                 body += _astrology(local_facts, anchors)
             elif key == "gematria":
                 body += _parameters(local_facts, anchors, ("gem.total", "gem.vowels", "gem.consonants"))
+                body += scenes.gematria(module.get("data", {}))
                 calculation_details = _gematria(module)
             elif key == "life_cycles":
                 body += _cycles(module, local_facts, anchors, inputs, calculation.get("as_of"))
@@ -429,9 +485,21 @@ def render_report(calculation: dict, narrative: dict | None = None) -> str:
                  f'<dt>Идентификатор расчёта</dt><dd>{_e(calculation.get("calculation_id", "Не указан"))}</dd>'
                  f'<dt>Версия структуры данных</dt><dd>{_e(calculation.get("schema_version", "Не указана"))}</dd>'
                  '</dl></details>')
+    if assets == "inline":
+        css = (ASSETS / "report.css").read_text(encoding="utf-8")
+        js = (ASSETS / "scenes.js").read_text(encoding="utf-8")
+        head_assets = f'<style>{css}</style>'
+        tail_assets = f'<script>{js}</script>'
+    else:
+        # Версия по содержимому: после обновления браузер и хостинг не отдадут старый файл из кэша.
+        def version(name: str) -> str:
+            return hashlib.sha256((ASSETS / name).read_bytes()).hexdigest()[:10]
+        head_assets = f'<link rel="stylesheet" href="assets/report.css?v={version("report.css")}">'
+        tail_assets = f'<script src="assets/scenes.js?v={version("scenes.js")}" defer></script>'
     return ('<!doctype html><html lang="ru"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             '<meta name="robots" content="noindex,nofollow,noarchive">'
-            f'<title>Анализ личности — {_e(name)}</title><style>{css}</style></head><body>'
+            '<meta name="color-scheme" content="light dark">'
+            f'<title>Анализ личности — {_e(name)}</title><script>{MOTION_BOOT}</script>{head_assets}</head><body>'
             '<a class="skip" href="#report">К отчёту</a><main id="report">' + header + toc + notices + "".join(sections) + summary + technical
-            + f'<footer><p>{DISCLAIMER}</p></footer></main></body></html>')
+            + f'<footer><p>{DISCLAIMER}</p></footer></main>{tail_assets}</body></html>')
