@@ -72,7 +72,7 @@
 .venv/bin/python personality.py render --calculation runs/calculation.json --narrative runs/narrative.json --site runs/report
 ```
 
-`--site` пишет папку страницы для сайта (`index.html`, `assets/`, `.htaccess`, `manifest.json`) и рядом `runs/report.zip`; `--output файл.html` — один автономный файл. Ровно один из двух ключей обязателен.
+`--site` пишет папку страницы для сайта (`index.html`, `assets/`, `.htaccess`, `manifest.json`) и рядом `runs/report.zip`; `--output файл.html` — один автономный файл. Ровно один из двух ключей обязателен. Необязательный `--banner "текст"` выводит строку над шапкой — например, для публичного примера на вымышленных данных.
 
 `check` с интерпретацией дополнительно печатает предупреждения стиля, которые не блокируют выпуск: больше четырёх источников у абзаца, три абзаца подряд с одинаковым списком источников, превышение бюджета условности по главе (`references/interpretation.md`).
 

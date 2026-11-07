@@ -219,7 +219,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn('<aside class="input-card"', report)
         self.assertNotIn('<details class="input-details">', report)
         self.assertGreater(report.index('<details class="technical-details">'), report.index('id="finance"'))
-        section = report.split('id="human_design"', 1)[1].split('</section>', 1)[0]
+        section = report.split('id="human_design"', 1)[1].split('</section>', 1)[0].replace("&nbsp;", " ")
         self.assertLess(section.index("Вводный текст"), section.index('class="parameter-strip"'))
         self.assertLess(section.index("Чтение результата"), section.index("Проверить на опыте"))
         self.assertLess(section.index("Проверить на опыте"), section.index('class="fact-details"'))
@@ -390,9 +390,6 @@ class ReportTests(unittest.TestCase):
                 write_site(Path(tmp), calculation(), protected_paths=(str(Path(tmp) / "calc.json"),))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class SiteSafetyTests(unittest.TestCase):
     def test_refuses_to_overwrite_foreign_folder(self):
@@ -418,3 +415,13 @@ class SiteSafetyTests(unittest.TestCase):
         report = render_report(calc)
         self.assertNotIn('class="graphic scene hd-graphic"', report)
         self.assertIn("Бодиграф не показан", report)
+
+    def test_reader_text_gets_site_typography(self):
+        calc = calculation()
+        narrative = {"sections": {"human_design": {"interpretation": [{"text": "Я и он — в доме, а не <b>", "sources": ["hd.type"]}]}}}
+        report = render_report(calc, narrative)
+        self.assertIn("Я&nbsp;и&nbsp;он&nbsp;— в&nbsp;доме, а&nbsp;не&nbsp;&lt;b&gt;", report)
+
+
+if __name__ == "__main__":
+    unittest.main()

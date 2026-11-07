@@ -249,9 +249,6 @@ class PipelineTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
 
-if __name__=='__main__':
-    unittest.main()
-
 
 class NarrativeWarningTests(unittest.TestCase):
     def test_warnings_flag_bulk_sources_repeats_and_hedging(self):
@@ -274,3 +271,7 @@ class NarrativeWarningTests(unittest.TestCase):
         calc = validate_calculation(load_json(root / "calculation.json"))
         narrative = validate_narrative(calc, load_json(root / "narrative.json"))
         self.assertEqual([], narrative_warnings(narrative))
+
+
+if __name__=='__main__':
+    unittest.main()

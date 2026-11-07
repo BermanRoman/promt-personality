@@ -103,6 +103,10 @@ a:hover { color: var(--accent); }
   margin: 0 0 .75rem;
 }
 .muted, .status { color: var(--muted); }
+.example-banner { margin: 0; padding: .6rem var(--gutter); margin-inline: calc(-1 * var(--gutter)); background: var(--gold-wash); color: var(--ink-soft); font-size: var(--fs-s); text-align: center; }
+.input-lead { color: var(--ink-soft); font-size: var(--fs-s); }
+.notice > p { color: var(--ink-soft); font-size: var(--fs-s); }
+.notice details { background: transparent; border-color: var(--line); }
 .status { display: inline-block; padding: .35rem .8rem; border: 1px dashed var(--rose); border-radius: 999px; font-size: var(--fs-s); }
 .draft-status { color: var(--rose-ink); }
 

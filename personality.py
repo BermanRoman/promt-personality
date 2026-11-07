@@ -23,6 +23,7 @@ def main(argv=None):
             target=command.add_mutually_exclusive_group(required=True)
             target.add_argument('--output',help='Один автономный HTML-файл (стили и сцены внутри)')
             target.add_argument('--site',help='Папка страницы для сайта: index.html, assets/, .htaccess, manifest.json и рядом .zip')
+            command.add_argument('--banner',help='Строка над шапкой, например «Пример на вымышленной героине»')
     compact=commands.add_parser('summary',help='Print compact facts without raw activations')
     compact.add_argument('--calculation',required=True)
     commands.add_parser('questionnaire',help='Print 36 questions without the scoring key')
@@ -67,11 +68,11 @@ def main(argv=None):
             protected=[args.calculation]+([args.narrative] if args.narrative else [])
             if args.site:
                 from personality_core.package import write_site
-                folder,archive=write_site(args.site,result,narrative,tuple(protected))
+                folder,archive=write_site(args.site,result,narrative,tuple(protected),args.banner)
                 print('Страница для сайта: '+str(folder)+'\nАрхив: '+str(archive))
             else:
                 from personality_core.report import render_report
-                write_atomic(args.output,render_report(result,narrative),protected)
+                write_atomic(args.output,render_report(result,narrative,banner=args.banner),protected)
                 print('Отчёт сохранён: '+str(args.output))
         return 0
     except (ValueError,TypeError,KeyError,OSError,RuntimeError,OverflowError) as exc:

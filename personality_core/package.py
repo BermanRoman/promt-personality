@@ -30,7 +30,7 @@ def _sha256(data: bytes) -> str:
 
 
 def write_site(out_dir: str | os.PathLike, calculation: dict, narrative: dict | None = None,
-               protected_paths: tuple = ()) -> tuple[Path, Path]:
+               protected_paths: tuple = (), banner: str | None = None) -> tuple[Path, Path]:
     """Write <out_dir>/ (index.html, assets/, .htaccess, manifest.json) and <out_dir>.zip.
 
     The folder is built next to the destination and swapped in whole, so an interrupted run never
@@ -59,7 +59,7 @@ def write_site(out_dir: str | os.PathLike, calculation: dict, narrative: dict | 
         raise ValueError("an archive with this name already exists next to the folder; choose another path")
     destination.parent.mkdir(parents=True, exist_ok=True)
     files: dict[str, bytes] = {
-        "index.html": render_report(calculation, narrative, assets="external").encode("utf-8"),
+        "index.html": render_report(calculation, narrative, assets="external", banner=banner).encode("utf-8"),
         ".htaccess": HTACCESS.encode("utf-8"),
     }
     for name in ASSET_FILES:

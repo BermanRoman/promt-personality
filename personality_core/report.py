@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import re
 from datetime import date
 from html import escape
 from pathlib import Path
@@ -76,6 +77,17 @@ def _e(value: object) -> str:
     return escape(_text(value), quote=True)
 
 
+GLUE = re.compile(r"(?<![^\s(«])([а-яёА-ЯЁ]{1,2}) (?=\S)")
+
+
+def _t(value: object) -> str:
+    """Escaped reader text with typography of the site: short prepositions and conjunctions
+    do not hang at the end of a line, and a dash does not start a new line."""
+    text = _e(value)
+    text = GLUE.sub(lambda m: m.group(1) + "&nbsp;", text)
+    return text.replace(" — ", "&nbsp;— ")
+
+
 def _longitude_text(value: object) -> str:
     """Round presentation only; original fact values remain untouched."""
     if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
@@ -116,7 +128,7 @@ def _grounded(items: list, anchors: dict[str, str], tag: str = "p", *, allow_emp
         ):
             continue
         citations = _sources(item, anchors) if sources else ""
-        output.append(f'<{tag}>{_e(item.get("text", ""))}{citations}</{tag}>')
+        output.append(f'<{tag}>{_t(item.get("text", ""))}{citations}</{tag}>')
     return "".join(output)
 
 
@@ -127,16 +139,25 @@ def _topics(items: list, anchors: dict[str, str], *, allow_empty: bool = False) 
             continue
         paragraphs = _grounded(topic.get("paragraphs", []), anchors, allow_empty=allow_empty)
         if paragraphs:
-            output.append('<div class="narrative-topic"><h3>' + _e(topic.get("title", "")) + '</h3>' + paragraphs + '</div>')
+            output.append('<div class="narrative-topic"><h3>' + _t(topic.get("title", "")) + '</h3>' + paragraphs + '</div>')
     return "".join(output)
 
 
-def _input_block(inputs: dict) -> str:
+def _input_block(inputs: dict, offset: object = None) -> str:
     rows = []
     for key, label in (("birth_date", "Дата рождения"), ("birth_time", "Время рождения"),
                        ("birth_place", "Место рождения"), ("timezone", "Часовой пояс")):
         if key in inputs:
-            rows.append('<div><dt>' + label + '</dt><dd>' + _e(inputs[key]) + '</dd></div>')
+            value = inputs[key]
+            if key == "birth_date":
+                try:
+                    value = date.fromisoformat(value).strftime("%d.%m.%Y")
+                except (TypeError, ValueError):
+                    pass
+            elif key == "timezone" and isinstance(offset, (int, float)) and not isinstance(offset, bool):
+                hours = f"{offset:+g}".replace("-", "−")
+                value = f"{value} (UTC{hours} на момент рождения)"
+            rows.append('<div><dt>' + label + '</dt><dd>' + _e(value) + '</dd></div>')
     if "time_accuracy" in inputs:
         accuracy = {"exact": "Точное время", "approximate": "Приблизительное время", "unknown": "Время неизвестно"}.get(inputs["time_accuracy"], inputs["time_accuracy"])
         if inputs["time_accuracy"] == "approximate" and "time_window_minutes" in inputs:
@@ -146,7 +167,10 @@ def _input_block(inputs: dict) -> str:
         return ""
     original = '<p class="detail-note">Ваши сведения — дословно</p><div class="original">' + _e(inputs["original_text"]) + '</div>' if "original_text" in inputs else ""
     return ('<aside class="input-card" aria-labelledby="input-heading"><p class="eyebrow">Основа вашего разбора</p>'
-            '<h2 id="input-heading">Исходные данные</h2>' + original
+            '<h2 id="input-heading">Исходные данные</h2>'
+            '<p class="input-lead">Разбор складывается из трёх источников: дата, время и место рождения — для Human Design, '
+            'астрологии, нумерологии и циклов; имя — для гематрии и чисел имени; ответы на 36 утверждений опроса — для архетипов.</p>'
+            + original
             + ('<dl class="input-fields">' + "".join(rows) + '</dl>' if rows else "") + '</aside>')
 
 
@@ -375,7 +399,7 @@ def _centers_by_gate():
     return hd.center_of_gate
 
 
-def render_report(calculation: dict, narrative: dict | None = None, *, assets: str = "inline") -> str:
+def render_report(calculation: dict, narrative: dict | None = None, *, assets: str = "inline", banner: str | None = None) -> str:
     """Render trusted calculation structure and escaped text without network requests.
 
     assets="inline" embeds report.css and scenes.js into one offline file; assets="external" links
@@ -391,7 +415,8 @@ def render_report(calculation: dict, narrative: dict | None = None, *, assets: s
     inputs = calculation.get("input", {})
     name = inputs.get("name") or "Индивидуальный отчёт"
     indexed = {fact["id"]: fact for fact in facts}
-    header = ('<div class="masthead"><span class="wordmark">Личная карта<span class="wordmark-dot" aria-hidden="true"> · </span></span>'
+    banner_html = f'<p class="example-banner">{_e(banner)}</p>' if banner else ""
+    header = (banner_html + '<div class="masthead"><span class="wordmark">Личная карта<span class="wordmark-dot" aria-hidden="true"> · </span></span>'
               '<span class="edition">Индивидуальный разбор</span></div>'
               '<header class="hero"><div class="hero-copy"><p class="eyebrow">Искусство узнавать себя</p>'
               f'<h1>{_e(name)}</h1><p class="hero-lead">Личный разбор</p>'
@@ -400,15 +425,19 @@ def render_report(calculation: dict, narrative: dict | None = None, *, assets: s
         header += '<p class="status draft-status">Расчётный черновик — интерпретация не подготовлена</p>'
     else:
         header += '<p class="hero-footnote">Символические системы для размышления о себе</p>'
-    header += '</div>' + ORBITAL_ART + '</header>' + _input_block(inputs) + _key_cards(indexed, anchors)
+    header += '</div>' + ORBITAL_ART + '</header>' + _input_block(inputs, ((calculation.get("modules", {}).get("human_design", {}).get("data") or {}).get("input") or {}).get("utc_offset")) + _key_cards(indexed, anchors)
     toc = ('<nav class="contents" aria-label="Оглавление"><div class="contents-heading"><p class="eyebrow">Маршрут чтения</p>'
-           '<h2>Грани вашего<br>портрета</h2><p>Читайте по порядку или начните с того, что откликается сейчас.</p></div><ol>'
+           '<h2>Грани вашего <br>портрета</h2><p>Читайте по порядку или начните с того, что откликается сейчас.</p></div><ol>'
            + "".join(f'<li><a href="#{key}"><span class="toc-number" aria-hidden="true">{number:02d}</span>'
                      f'<span><span class="toc-title">{_e(title)}</span><span class="toc-note">{_e(SECTION_NOTES[key])}</span></span>'
                      '<span class="toc-arrow" aria-hidden="true">↗</span></a></li>' for number, (key, title) in enumerate(SECTIONS, 1))
            + '<li class="toc-summary"><a href="#summary"><span class="toc-number" aria-hidden="true">✧</span><span><span class="toc-title">Общий разбор</span><span class="toc-note">Как результаты складываются вместе</span></span><span class="toc-arrow" aria-hidden="true">↗</span></a></li></ol></nav>')
     warnings = calculation.get("warnings", [])
-    notices = '<aside class="notice caveats" aria-label="Ограничения расчёта"><h2>О точности этого разбора</h2><ul>' + "".join(f'<li>{_e(warning)}</li>' for warning in warnings) + '</ul></aside>' if warnings else ""
+    notices = ('<aside class="notice caveats" aria-label="Ограничения расчёта"><h2>О точности этого разбора</h2>'
+               '<p>Числа и положения планет посчитала программа. Несколько показателей зависят от точности времени '
+               'рождения или считаются приближённо; в главах они отмечены там, где это меняет вывод.</p>'
+               '<details><summary>Технические оговорки расчёта</summary><ul>'
+               + "".join(f'<li>{_e(warning)}</li>' for warning in warnings) + '</ul></details></aside>') if warnings else ""
     summary_text = _grounded(narrative.get("summary", []), anchors) if narrative else ""
     summary_topics = _topics(narrative.get("summary_topics", []), anchors) if narrative else ""
     summary = ('<section id="summary" class="report-section summary-section" aria-labelledby="heading-summary">'
@@ -429,7 +458,7 @@ def render_report(calculation: dict, narrative: dict | None = None, *, assets: s
             body += '<p class="status">Расчёт недоступен: ' + _e(module.get("reason") or "Для этого раздела нет расчётных данных.") + '</p>'
         section_narrative = narrative.get("sections", {}).get(key, {}) if narrative else {}
         if section_narrative.get("intro"):
-            body += '<p class="section-intro">' + _e(section_narrative["intro"]) + '</p>'
+            body += '<p class="section-intro">' + _t(section_narrative["intro"]) + '</p>'
         section_facts = [fact for fact in facts if fact.get("section") == key]
         # Only this section's facts feed its graphics.
         local_facts = {fact["id"]: fact for fact in section_facts}
