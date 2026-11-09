@@ -2,7 +2,7 @@
 
 Every scene is rendered in its final state: without JavaScript, with reduced motion and in print the
 reader sees the complete picture. assets/scenes.js only hides the steps until the figure scrolls
-into view and replays them on request. Values come from the calculation; nothing is computed here
+into view; a tap on the figure plays the steps backwards and then forwards again. Values come from the calculation; nothing is computed here
 except screen geometry.
 """
 
@@ -23,38 +23,20 @@ def _step(k: float, j: float = 0) -> str:
 
 # ---------- Human Design bodygraph ----------
 
-# Screen positions only (viewBox 0 0 300 430); the chart itself comes from hd.compute.
+# Screen positions only (viewBox 0 0 300 512); the chart itself comes from hd.compute.
+# name: (shape, geometry, anchor of channels, label text, label x, label y, text-anchor)
 CENTER_SHAPES = {
-    "Голова": ("tri-up", 150, 38),
-    "Аджна": ("tri-down", 150, 100),
-    "Горло": ("square", 150, 168),
-    "G-центр": ("diamond", 150, 240),
-    "Эго": ("tri-small", 210, 262),
-    "Селезёнка": ("tri-right", 62, 312),
-    "Сакрал": ("square", 150, 322),
-    "Солнечное сплетение": ("tri-left", 238, 312),
-    "Корень": ("square", 150, 414),
+    "Голова": ("poly", "150,10 180,58 120,58", (150, 42), "Голова", 150, 76, "middle"),
+    "Аджна": ("poly", "120,90 180,90 150,138", (150, 106), "Аджна", 150, 156, "middle"),
+    "Горло": ("rect", (126, 170, 48, 48), (150, 194), "Горло", 150, 236, "middle"),
+    # подпись «G» слева от ромба, подписи боковых треугольников — над ними: не налезают на каналы
+    "G-центр": ("poly", "150,252 182,284 150,316 118,284", (150, 284), "G", 110, 289, "end"),
+    "Эго": ("poly", "198,290 238,306 198,322", (211, 306), "Эго", 218, 282, "middle"),
+    "Селезёнка": ("poly", "40,346 88,374 40,402", (56, 374), "Селезёнка", 10, 336, "start"),
+    "Сакрал": ("rect", (126, 350, 48, 48), (150, 374), "Сакрал", 150, 416, "middle"),
+    "Солнечное сплетение": ("poly", "260,346 212,374 260,402", (244, 374), "Сплетение", 290, 336, "end"),
+    "Корень": ("rect", (126, 438, 48, 48), (150, 462), "Корень", 150, 504, "middle"),
 }
-CENTER_SHORT = {
-    "Голова": "Голова", "Аджна": "Аджна", "Горло": "Горло", "G-центр": "G", "Эго": "Эго",
-    "Селезёнка": "Селезёнка", "Сакрал": "Сакрал", "Солнечное сплетение": "Сплетение", "Корень": "Корень",
-}
-
-
-def _shape(kind: str, x: float, y: float) -> str:
-    s = 24
-    if kind == "square":
-        return f'<rect x="{x - s}" y="{y - s}" width="{2 * s}" height="{2 * s}" rx="6"/>'
-    if kind == "diamond":
-        return f'<polygon points="{x},{y - 30} {x + 30},{y} {x},{y + 30} {x - 30},{y}"/>'
-    points = {
-        "tri-up": ((x, y - 26), (x + 28, y + 22), (x - 28, y + 22)),
-        "tri-down": ((x - 28, y - 22), (x + 28, y - 22), (x, y + 26)),
-        "tri-right": ((x - 22, y - 28), (x + 26, y), (x - 22, y + 28)),
-        "tri-left": ((x + 22, y - 28), (x - 26, y), (x + 22, y + 28)),
-        "tri-small": ((x - 18, y - 16), (x + 20, y), (x - 18, y + 16)),
-    }[kind]
-    return '<polygon points="' + " ".join(f"{px:g},{py:g}" for px, py in points) + '"/>'
 
 
 def bodygraph(chart: dict, centers_by_gate) -> str:
@@ -77,33 +59,38 @@ def bodygraph(chart: dict, centers_by_gate) -> str:
         key = tuple(sorted((a, b)))
         offset = pairs.get(key, 0)
         pairs[key] = offset + 1
-        (_, x1, y1), (_, x2, y2) = CENTER_SHAPES[a], CENTER_SHAPES[b]
+        (x1, y1), (x2, y2) = CENTER_SHAPES[a][2], CENTER_SHAPES[b][2]
         # parallel channels between the same centers are shifted sideways
         length = math.hypot(x2 - x1, y2 - y1) or 1
-        shift = (offset - 0) * 7
+        shift = offset * 7
         nx, ny = -(y2 - y1) / length * shift, (x2 - x1) / length * shift
         x1, y1, x2, y2 = x1 + nx, y1 + ny, x2 + nx, y2 + ny
-        lines.append(f'<line class="hd-channel s-draw" x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
-                     f'style="--len:{math.ceil(length)};{_step(2, index)}"><title>Канал {_e(channel[0])}–{_e(channel[1])}</title></line>')
+        lines.append(f'<line class="hd-channel" x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
+                     f'style="--len:{math.ceil(length)};--m:{index}"><title>Канал {_e(channel[0])}–{_e(channel[1])}</title></line>')
     shapes = []
-    for index, (name, (kind, x, y)) in enumerate(CENTER_SHAPES.items()):
+    defined_index = 0
+    for index, (name, (kind, geometry, _anchor, label, lx, ly, text_anchor)) in enumerate(CENTER_SHAPES.items()):
         state = "defined" if name in defined else "open"
-        shapes.append(f'<g class="hd-center {state} s-in s-pop" style="{_step(0, index)}"><title>{_e(name)}: '
-                      f'{"определён" if state == "defined" else "не определён"}</title>{_shape(kind, x, y)}</g>')
-        label_y = {"tri-up": y + 36, "tri-down": y + 40, "square": y + 39, "diamond": y + 45,
-                   "tri-small": y - 22, "tri-right": y + 44, "tri-left": y + 44}[kind]
-        shapes.append(f'<text class="hd-label s-in" x="{x}" y="{label_y}" text-anchor="middle" style="{_step(1, index)}">{_e(CENTER_SHORT[name])}</text>')
+        order = f"--j:{index}"
+        if state == "defined":
+            order += f";--d:{defined_index}"
+            defined_index += 1
+        title = f'<title>{_e(name)}: {"определён" if state == "defined" else "не определён"}</title>'
+        if kind == "rect":
+            x, y, w, h = geometry
+            shapes.append(f'<rect class="hd-center {state}" style="{order}" x="{x}" y="{y}" width="{w}" height="{h}" rx="6">{title}</rect>')
+        else:
+            shapes.append(f'<polygon class="hd-center {state}" style="{order}" points="{geometry}">{title}</polygon>')
+        shapes.append(f'<text class="hd-label" style="--j:{index}" x="{lx}" y="{ly}" text-anchor="{text_anchor}">{_e(label)}</text>')
     defined_names = ", ".join(name for name in CENTER_SHAPES if name in defined) or "нет"
     channel_names = ", ".join(f"{a}–{b}" for a, b in channels) or "нет"
     return ('<figure class="graphic scene hd-graphic"><h3>Бодиграф</h3>'
-            '<svg class="chart bodygraph" viewBox="0 0 300 456" role="img" aria-labelledby="hd-graph-title hd-graph-desc">'
+            '<svg class="chart bodygraph" viewBox="0 0 300 512" role="img" aria-labelledby="hd-graph-title hd-graph-desc">'
             '<title id="hd-graph-title">Бодиграф Human Design</title>'
             f'<desc id="hd-graph-desc">Определённые центры: {_e(defined_names)}. Каналы: {_e(channel_names)}.</desc>'
             + "".join(lines) + "".join(shapes) + '</svg>'
             '<ul class="graph-legend"><li><span class="swatch defined"></span>определённые центры</li>'
-            '<li><span class="swatch open"></span>неопределённые</li><li><span class="swatch channel"></span>каналы</li></ul>'
-            '<figcaption>Схема по готовому расчёту: какие центры определены и какими каналами они связаны. '
-            'Расположение центров условное, ворота не показаны.</figcaption></figure>')
+            '<li><span class="swatch open"></span>неопределённые</li><li><span class="swatch channel"></span>каналы</li></ul></figure>')
 
 
 # ---------- gematria ----------
@@ -166,13 +153,14 @@ def key_numbers(data: dict, labels: dict[str, str]) -> str:
             '<figcaption>Крупно — итоговое число, под ним — исходная сумма и шаги сокращения из расчёта.</figcaption></figure>')
 
 
-def square(data: dict, matrix_cells: str) -> str:
-    """matrix_cells — готовые ячейки квадрата со ссылками на факты (report._matrix)."""
-    source = data.get("square", {}).get("source_digits") if isinstance(data.get("square"), dict) else None
+def square(source: object, matrix_cells: str, zero_step: int = 2) -> str:
+    """matrix_cells — готовые ячейки квадрата (report._matrix).
+
+    Шаги: 0 — цифры даты, zero_step — нули гаснут, сетка и цифры по одной в свои ячейки (report._matrix)."""
     digits = ""
     if isinstance(source, str) and source.isascii() and source.isdigit():
         digits = ('<div class="sq-digits" aria-hidden="true">' + "".join(
             f'<span class="{"zero " if d == "0" else ""}s-in s-pop" style="{_step(0, i)}">{d}</span>' for i, d in enumerate(source))
-            + '</div><p class="sq-note s-in" style="--k:1">Нули в квадрат не идут</p>')
+            + f'</div><p class="sq-note s-in" style="--k:{zero_step}">Нули в квадрат не идут</p>')
     return ('<figure class="graphic scene sq-graphic"><h3>Квадрат нумерологии</h3>' + digits + matrix_cells
             + '<figcaption>Цифры даты расходятся по своим ячейкам; число в ячейке — сколько раз цифра встретилась.</figcaption></figure>')

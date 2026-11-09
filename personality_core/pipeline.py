@@ -443,16 +443,25 @@ def narrative_warnings(narrative):
                     text.append(str(item.get('text','')))
                     if len(sources)>4:
                         warnings.append(f'{label}: абзац с {len(sources)} источниками (больше 4) — оставьте 1–3, прямо подтверждающих фразу')
-                    run=run+1 if sources and sources==previous else 1
-                    previous=sources
+                    # Короткие абзацы по одному предложению (правило автора «одно предложение — один абзац») часто
+                    # законно опираются на один параметр, поэтому в серию одинаковых источников входят
+                    # только абзацы длиннее одного предложения.
+                    long_item=_sentence_count(str(item.get('text','')))>1
+                    run=run+1 if long_item and sources and sources==previous else (1 if long_item else 0)
+                    previous=sources if long_item else None
                     if run==3:
                         warnings.append(f'{label}: три абзаца подряд с одинаковым списком источников')
         joined=' '.join(text)
-        sentences=max(1,len(re.findall(r'[.!?…](?:\s|$)',joined)))
+        sentences=max(1,_sentence_count(joined))
         hedges=len(HEDGES.findall(joined))
         if hedges*3>sentences:
             warnings.append(f'{key}: маркеров условности {hedges} на {sentences} предложений — больше бюджета (1 на 3)')
     return warnings
+
+
+def _sentence_count(text):
+    # Конец фразы: . ! ? … либо закрывающие » и ) без точки (правило автора), затем пробел или конец текста.
+    return len(re.findall(r'(?:[.!?…]|[»)])(?=\s|$)',text))
 
 
 def summary(calculation):

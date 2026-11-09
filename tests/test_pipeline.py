@@ -256,7 +256,7 @@ class NarrativeWarningTests(unittest.TestCase):
         bulk = ["a", "b", "c", "d", "e"]
         narrative = {"sections": {"numerology": {
             "interpretation": [{"text": "Число пять.", "sources": bulk}],
-            "topics": [{"title": "Тема", "paragraphs": [{"text": "Возможно, можно проверить гипотезу.", "sources": ["x"]}] * 3}],
+            "topics": [{"title": "Тема", "paragraphs": [{"text": "Возможно, можно проверить гипотезу. Второе предложение.", "sources": ["x"]}] * 3}],
         }}, "summary": [{"text": "Конкретный вывод.", "sources": ["y"]}]}
         notes = narrative_warnings(narrative)
         self.assertTrue(any("5 источниками" in n for n in notes))
@@ -264,6 +264,19 @@ class NarrativeWarningTests(unittest.TestCase):
         self.assertTrue(any("маркеров условности" in n for n in notes))
         clean = {"sections": {"numerology": {"interpretation": [{"text": "Жизненный путь 8 считают числом организатора. Он берётся за масштаб.", "sources": ["n"]}]}}, "summary": []}
         self.assertEqual([], narrative_warnings(clean))
+
+    def test_short_one_sentence_paragraphs_with_same_sources_are_not_a_run(self):
+        from personality_core.pipeline import narrative_warnings
+        short = [{"text": "Первая мысль.", "sources": ["x"]}, {"text": "Вторая мысль.", "sources": ["x"]},
+                 {"text": "Третья мысль.", "sources": ["x"]}, {"text": "Четвёртая мысль.", "sources": ["x"]}]
+        notes = narrative_warnings({"sections": {"numerology": {"interpretation": short}}, "summary": []})
+        self.assertFalse(any("три абзаца подряд" in n for n in notes))
+
+    def test_sentence_end_after_quote_or_bracket_without_dot_counts(self):
+        from personality_core.pipeline import _sentence_count
+        hedged = "Возможно, так. Можно так. Проверьте так."
+        self.assertEqual(3, _sentence_count(hedged))
+        self.assertEqual(2, _sentence_count("Он сказал «да» Так бывает (пример)"))
 
     def test_reference_example_passes_check_without_style_warnings(self):
         from personality_core.pipeline import narrative_warnings, validate_calculation, validate_narrative

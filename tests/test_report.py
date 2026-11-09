@@ -1,9 +1,11 @@
 """Safety and contract checks for the standalone HTML report."""
 
+import math
+import re
 import unittest
 from html.parser import HTMLParser
 
-from personality_core.report import ASSETS, DISCLAIMER, MOTION_BOOT, SECTIONS, render_report
+from personality_core.report import ASSETS, DISCLAIMER, MOTION_BOOT, SECTIONS, THEME_BOOT, render_report
 
 
 class Document(HTMLParser):
@@ -42,7 +44,7 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("Что можно попробовать", report)
         self.assertIn("Исходная строка\nс переносом", report)
         self.assertNotIn("[5, 5, 5", report)
-        self.assertIn(f'<footer><p>{DISCLAIMER}</p></footer></main>', report)
+        self.assertIn(f'<footer class="site-foot"><p class="pa-foot">{DISCLAIMER}</p></footer></div></main>', report)
         self.assertTrue(report.endswith('</script></body></html>'))
 
     def test_absent_and_unavailable_sections_explain_why(self):
@@ -105,9 +107,9 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn(malicious, report)
         self.assertNotIn("<script>alert", report)
         self.assertIn("&lt;script&gt;", report)
-        # Only our own scripts: the motion boot in <head> and assets/scenes.js before </body>.
+        # Only our own scripts: theme and motion boots in <head> and assets/scenes.js before </body>.
         scripts = [part.split("</script>", 1)[0] for part in report.split("<script>")[1:]]
-        self.assertEqual([MOTION_BOOT, (ASSETS / "scenes.js").read_text(encoding="utf-8")], scripts)
+        self.assertEqual([THEME_BOOT, MOTION_BOOT, (ASSETS / "scenes.js").read_text(encoding="utf-8")], scripts)
         self.assertFalse(any(tag in {"img", "iframe", "object"} for tag, _ in doc.elements))
         self.assertFalse(any(key.startswith("on") for _, attrs in doc.elements for key in attrs))
 
@@ -152,7 +154,8 @@ class ReportTests(unittest.TestCase):
         for _, attrs in doc.elements:
             if "href" in attrs:
                 self.assertIn(attrs["href"][1:], ids)
-        self.assertIn('href="#fact-1"', report)
+        self.assertIn("Есть источник", report)
+        self.assertNotIn('href="#fact-', report)
         self.assertNotIn("Нет источника", report)
         self.assertNotIn("Неподтверждённое действие", report)
 
@@ -165,16 +168,15 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(9, report.count('class="matrix-cell'))
         self.assertEqual(12, report.count('class="bar-fill'))
         self.assertIn("135.5°", report)
-        self.assertIn('<svg class="chart zodiac-chart"', report)
-        self.assertIn("без домов и аспектов", report)
+        self.assertIn('<svg class="chart wheel-chart"', report)
+        self.assertNotIn("аспект", report.split("</style>", 1)[1].lower().replace("аспекты не", ""))
         self.assertNotIn('class="graphic scene hd-graphic"', report)
 
     def test_missing_invalid_or_cross_section_graphics_not_fabricated(self):
         calc = calculation()
         calc["facts"] += [{"id": "astro.sun.longitude", "section": "astrology", "label": "Солнце", "value": float("nan")}, {"id": "arch.1", "section": "finance", "label": "Не архетип", "value": 100}]
         report = render_report(calc)
-        self.assertNotIn('<svg class="chart zodiac-chart"', report)
-        self.assertNotIn('<svg class="chart longitude-scale"', report)
+        self.assertNotIn('<svg class="chart wheel-chart"', report)
         self.assertNotIn('class="matrix-cell', report)
         self.assertNotIn('class="bar-fill', report)
 
@@ -197,32 +199,94 @@ class ReportTests(unittest.TestCase):
         self.assertIn("--accent: #493447", report)
         self.assertIn("--rose: #bc8f9b", report)
         self.assertIn("prefers-reduced-motion: reduce", report)
-        self.assertIn("prefers-color-scheme: dark", report)
-        self.assertIn('tabindex="0"', report)
-        self.assertIn('<details class="fact-details">', report)
+        self.assertIn('html[data-theme="dark"]', report)
+        self.assertIn('<html lang="ru" data-theme="dark">', report)
+        self.assertIn('id="pa-theme" role="switch"', report)
+        self.assertIn('aria-label="Тёмная тема"', report)
+        self.assertNotIn("Светлая тема", report)  # подпись переключателя постоянна, меняется только aria-checked
+        self.assertIn("setAttribute('aria-checked'", report + (ASSETS / "scenes.js").read_text(encoding="utf-8"))
+        self.assertNotIn("setAttribute('aria-label'", (ASSETS / "scenes.js").read_text(encoding="utf-8"))
+        self.assertIn("r.classList.remove('gj')", report)  # запасной таймер скрывает переключатель без scenes.js
         self.assertIn('details::details-content { content-visibility: visible', report)
-        self.assertIn('aria-label="Оглавление"', report)
+        self.assertNotIn('aria-label="Оглавление"', report)
+        self.assertNotIn('fact-details', report)
+        self.assertNotIn('technical-details', report)
         self.assertNotIn('"answers"', report)
 
-    def test_new_editorial_structure_and_technical_metadata_location(self):
+    def test_header_is_orbit_caption_and_word_without_name_and_contents(self):
         calc = calculation()
         narrative = {"sections": {"human_design": {
             "intro": "Вводный текст",
             "interpretation": [{"text": "Чтение результата", "sources": ["hd.type"]}],
             "actions": [{"text": "Проверить на опыте", "sources": ["hd.type"]}],
         }}}
-        report = render_report(calc, narrative)
-        header = report.split('<header class="hero">', 1)[1].split('</header>', 1)[0]
-        self.assertIn("Тестовый профиль", header)
+        report = render_report(calc, narrative, banner="Пример")
+        header = report.split('<header class="note-head">', 1)[1].split('</header>', 1)[0]
+        self.assertNotIn("Тестовый профиль", header)
         self.assertNotIn(calc["calculation_id"], header)
-        self.assertIn('class="hero-art" aria-hidden="true"', header)
-        self.assertIn('<aside class="input-card"', report)
-        self.assertNotIn('<details class="input-details">', report)
-        self.assertGreater(report.index('<details class="technical-details">'), report.index('id="finance"'))
+        self.assertIn('class="pa-art" aria-hidden="true"', header)
+        self.assertIn('d="M 224 155 A 69 69 0 1 0 224 285 A 83 83 0 0 1 224 155"', header)
+        self.assertEqual(2, header.count('<ellipse'))
+        self.assertEqual(2, header.count('<g class="a-dot a-dot'))
+        self.assertEqual(3, header.count('class="a-star"'))
+        self.assertIn('<p class="pa-eyebrow">Матрица программного комплекса</p><h1>Судьба</h1>', header)
+        self.assertIn("<title>Анализ личности — Тестовый профиль</title>", report)
+        self.assertIn('<p class="example-banner">Пример</p>', report)
+        body = report.split("</style>", 1)[1]
+        for gone in ("masthead", "Личная карта", "Индивидуальный разбор", 'class="contents"', "Грани вашего", 'class="hero'):
+            self.assertNotIn(gone, body)
+        self.assertLess(report.index('<header class="note-head">'), report.index('<aside class="input-card"'))
+        self.assertNotIn("Расчётные факты и источники", report)
+        self.assertNotIn("Технические сведения", report)
         section = report.split('id="human_design"', 1)[1].split('</section>', 1)[0].replace("&nbsp;", " ")
         self.assertLess(section.index("Вводный текст"), section.index('class="parameter-strip"'))
         self.assertLess(section.index("Чтение результата"), section.index("Проверить на опыте"))
-        self.assertLess(section.index("Проверить на опыте"), section.index('class="fact-details"'))
+
+    def test_section_heading_kicker_then_outlined_number_and_title(self):
+        report = render_report(calculation())
+        section = report.split('id="human_design"', 1)[1].split('</section>', 1)[0]
+        self.assertIn('<div class="section-heading"><p class="section-kicker">Ритм решений и взаимодействия</p>'
+                      '<h2 id="heading-human_design"><span class="section-number" aria-hidden="true">01</span> Human Design</h2></div>', section)
+        self.assertIn('<span class="section-number" aria-hidden="true">09</span> Общий разбор', report)
+
+    def test_questions_cards_parentheses_and_closing_dot(self):
+        calc = calculation()
+        narrative = {"sections": {"human_design": {
+            "interpretation": [{"text": "Он говорит «да» (но не всегда).", "sources": ["hd.type"]}, {"text": "Конец предложения (примечание).", "sources": ["hd.type"]}],
+            "actions": [{"text": "Две недели отмечайте решения", "sources": ["hd.type"]}, {"text": "Назовите срок", "sources": ["hd.type"]}],
+        }}}
+        report = render_report(calc, narrative)
+        self.assertIn('<aside class="pa-read"><h3>Как это можно прочитать?</h3>', report)
+        self.assertIn('<p class="pa-try-k">От размышления к опыту</p><h3>Что можно попробовать?</h3><ol class="pa-try-list"><li>', report)
+        self.assertIn('<span class="paren">(но&nbsp;не&nbsp;всегда)</span></p>', report)
+        self.assertIn('<span class="paren">(примечание)</span></p>', report)
+        self.assertNotIn(')</span>.</p>', report)
+        # внутри абзаца точка после » остаётся: снимается только в конце текста
+        merged = render_report(calc, {"sections": {"human_design": {"interpretation": [{"text": "Слово «да». Потом нет.", "sources": ["hd.type"]}]}}})
+        self.assertIn("«да». Потом", merged)
+        closing = render_report(calc, {"sections": {"human_design": {"interpretation": [{"text": "Он сказал «да».", "sources": ["hd.type"]}]}}})
+        self.assertIn("«да»</p>", closing)
+
+    def test_no_footnote_links_and_no_fact_anchors(self):
+        calc = calculation()
+        narrative = {"summary": [{"text": "Вывод", "sources": ["hd.type"]}], "sections": {"human_design": {"interpretation": [{"text": "Есть источник", "sources": ["hd.type"]}]}}}
+        report = render_report(calc, narrative)
+        self.assertIn("Есть источник", report)
+        self.assertNotIn('class="sources"', report)
+        self.assertNotIn("[1]", report)
+        self.assertNotIn('id="fact-', report)
+        self.assertNotIn('href="#fact-', report)
+        self.assertNotIn("Источник:", report)
+
+    def test_input_card_has_caps_labels_over_values_and_quiet_notes(self):
+        calc = calculation()
+        calc["input"].update(birth_date="1990-01-15", birth_time="12:00", timezone="Europe/Moscow", time_accuracy="approximate", time_window_minutes=15)
+        calc["modules"]["human_design"]["data"] = {"input": {"utc_offset": 3}}
+        inputs = render_report(calc).split('<aside class="input-card"', 1)[1].split('</aside>', 1)[0]
+        self.assertIn('Основа вашего разбора', inputs)
+        self.assertIn('<div><dt>Дата рождения</dt><dd>15.01.1990</dd></div>', inputs)
+        self.assertIn('<dd>Europe/Moscow<small>UTC+3 на момент рождения</small></dd>', inputs)
+        self.assertIn('<dd>Приблизительное время<small>окно ±15 мин.</small></dd>', inputs)
 
     def test_key_cards_only_use_existing_facts_and_keep_ties(self):
         calc = calculation()
@@ -233,7 +297,7 @@ class ReportTests(unittest.TestCase):
             {"id": "arch.3", "section": "archetypes", "label": "Герой", "value": 14, "detail": "Плотный ранг: 2; сумма трёх ответов."},
         ]
         report = render_report(calc)
-        cards = report.split('aria-label="Ключевые показатели">', 1)[1].split('<nav class="contents"', 1)[0]
+        cards = report.split('aria-label="Ключевые показатели">', 1)[1].split('<section class="report-section"', 1)[0]
         self.assertEqual(3, cards.count('class="key-card"'))
         self.assertIn("Ведущие архетипы", cards)
         self.assertIn("Искатель", cards)
@@ -251,17 +315,15 @@ class ReportTests(unittest.TestCase):
         report = render_report(calc, narrative)
         self.assertLess(report.index('</header>'), report.index('<aside class="input-card"'))
         self.assertLess(report.index('<aside class="input-card"'), report.index('aria-label="Ключевые показатели"'))
-        self.assertLess(report.index('aria-label="Ключевые показатели"'), report.index('<nav class="contents"'))
         inputs = report.split('<aside class="input-card"', 1)[1].split('</aside>', 1)[0]
         self.assertNotIn('<details', inputs)
         self.assertIn("Исходная строка\nс переносом", inputs)
         self.assertIn("Europe/Moscow", inputs)
         self.assertIn("окно ±15 мин.", inputs)
         self.assertNotIn("Тестовый профиль", inputs)
-        self.assertIn('href="#summary"', report)
         self.assertNotIn("На первый взгляд", report)
         self.assertLess(report.index('id="finance"'), report.index('id="summary"'))
-        self.assertLess(report.index('id="summary"'), report.index('class="technical-details"'))
+        self.assertLess(report.index('id="summary"'), report.index('class="site-foot"'))
         self.assertLess(report.index("Итоговые связи"), report.index("Общая картина"))
         self.assertIn("Подробный синтез", report)
 
@@ -305,47 +367,120 @@ class ReportTests(unittest.TestCase):
         self.assertIn("От 54 лет", cycles)
         self.assertIn("Без верхней границы", cycles)
         self.assertRegex(cycles, r'aria-current="step" style="[^"]*"><span class="period-index">01')
-        self.assertIn('>11</a>', cycles)
+        self.assertIn('<strong>11</strong>', cycles)
         self.assertEqual(1, cycles.count('aria-current="step"'))
         calc["as_of"] = "2026-11-06"
         report = render_report(calc)
         self.assertRegex(report, r'aria-current="step" style="[^"]*"><span class="period-index">02')
         self.assertEqual(11, peaks[0]["number"]["master"])
 
-    def test_astrology_has_zodiac_scale_and_non_crossing_numbered_markers(self):
+    def test_gematria_table_scrolls_by_keyboard_and_no_zodiac_glyphs(self):
+        calc = calculation()
+        calc["modules"]["gematria"]["data"] = {"words": [{"word": "Анна", "letters": [{"source": "А", "transliteration": "A", "latin": "A", "value": 1, "kind": "vowel"}], "total": 987}]}
+        report = render_report(calc)
+        self.assertIn('class="table-wrap" role="region"', report)
+        self.assertIn('tabindex="0"', report)
+        self.assertFalse(any(0x2648 <= ord(character) <= 0x2653 for character in report))
+
+    def test_astrology_wheel_has_signs_planet_marks_and_no_lists_under_it(self):
         calc = calculation()
         planets = ("sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto")
         calc["facts"] += [{"id": f"astro.{planet}.longitude", "section": "astrology", "label": planet, "value": i * 30 + 2.12345} for i, planet in enumerate(planets)]
         report = render_report(calc)
-        self.assertIn('class="chart zodiac-chart"', report)
-        self.assertEqual(12, report.count('<text class="degree-label"'))
-        self.assertEqual(12, report.count('<text class="zodiac-label"'))
+        self.assertIn('class="chart wheel-chart"', report)
+        self.assertEqual(12, report.count('<text class="w-sign"'))
         for label in ("Овн", "Тел", "Блз", "Рак", "Лев", "Дев", "Вес", "Скр", "Стр", "Коз", "Вод", "Рыб"):
             self.assertIn(f'>{label}</text>', report)
-        self.assertIn('.chart text.zodiac-label { font-size: 15px;', report)
-        self.assertFalse(any(0x2648 <= ord(character) <= 0x2653 for character in report))
-        self.assertEqual(10, report.count('<circle class="planet-marker"'))
-        self.assertNotIn('class="planet-line"', report)
+        self.assertEqual(10, report.count('<circle class="w-pl"'))
+        for mark in ("Су", "Лу", "Ме", "Ве", "Ма", "Юп", "Са", "Ур", "Не", "Пл"):
+            self.assertIn(f'>{mark}</text>', report)
+        self.assertNotIn("planet-legend", report)
+        self.assertNotIn("Таблица положений планет", report)
+        self.assertNotIn("chart-instruction", report)
+        figure = report.split('astrology-graphic', 1)[1].split('</figure>', 1)[0]
+        self.assertNotIn("<figcaption>", figure)
+        self.assertNotIn("<ol", figure)
+        self.assertNotIn("аспект", figure.lower())  # в расчёте аспектов нет: круг их не рисует
+        # доступное описание круга хранит положения без списка на странице
         self.assertIn("2.123°", report)
-        self.assertIn("Таблица положений планет", report)
+        # плотная группа раздвигается по дуге, долготы не меняются: 10 кружков, расстояние между центрами не меньше диаметра
         for fact in calc["facts"][1:]:
             fact["value"] = 10
         dense = render_report(calc)
-        self.assertIn('class="chart longitude-scale"', dense)
-        self.assertEqual(10, dense.count('<span class="planet-index">'))
-        self.assertNotIn('class="planet-line"', dense)
+        centers = [(float(x), float(y)) for x, y in re.findall(r'<circle class="w-pl" cx="([\d.]+)" cy="([\d.]+)" r="19"/>', dense)]
+        self.assertEqual(10, len(centers))
+        for i, a in enumerate(centers):
+            for b in centers[i + 1:]:
+                self.assertGreaterEqual(math.hypot(a[0] - b[0], a[1] - b[1]), 38)
+
+    def test_wheel_turns_so_ascendant_is_on_the_left_and_draws_axes(self):
+        calc = calculation()
+        calc["facts"] += [{"id": "astro.sun.longitude", "section": "astrology", "label": "Солнце", "value": 100.0},
+                          {"id": "astro.ascendant.longitude", "section": "astrology", "label": "Асц", "value": 157.664},
+                          {"id": "astro.midheaven.longitude", "section": "astrology", "label": "MC", "value": 57.45}]
+        report = render_report(calc)
+        self.assertEqual(2, report.count('class="w-axis s-draw"'))
+        self.assertIn(">Асц≈</text>", report)
+        self.assertIn(">MC≈</text>", report)
+        axis = re.search(r'<line class="w-axis s-draw" x1="([\d.]+)" y1="([\d.]+)"', report)
+        self.assertLess(float(axis.group(1)), 100)  # конец оси Асцендента — слева от центра
+        self.assertIn("приближённо", report)
 
     def test_bodygraph_draws_existing_chart_only(self):
         calc = calculation()
         calc["modules"]["human_design"]["data"] = {"chart": {"channels": [[3, 60], [10, 57]], "defined_centers": ["Сакрал", "Корень", "G-центр", "Селезёнка"]}}
         report = render_report(calc)
         self.assertIn('class="graphic scene hd-graphic"', report)
-        self.assertEqual(2, report.count('class="hd-channel s-draw"'))
+        self.assertEqual(2, report.count('class="hd-channel"'))
         self.assertEqual(4, report.count('class="hd-center defined'))
         self.assertEqual(5, report.count('class="hd-center open'))
+        self.assertEqual(9, report.count('class="hd-label"'))
         self.assertIn("Канал 3–60", report)
+        figure = report.split('hd-graphic', 1)[1].split('</figure>', 1)[0]
+        for label in ("Голова", "Аджна", "Горло", "Эго", "Селезёнка", "Сакрал", "Сплетение", "Корень"):
+            self.assertIn(f'>{label}</text>', figure)
+        # «G» стоит слева от ромба, подписи боковых треугольников — над ними
+        self.assertIn('x="110" y="289" text-anchor="end">G</text>', figure)
+        self.assertIn('y="336" text-anchor="start">Селезёнка</text>', figure)
+        for text in ("определённые центры", "неопределённые", "каналы"):
+            self.assertIn(text, figure)
+        self.assertNotIn("<figcaption>", figure)
         calc["modules"]["human_design"]["data"]["chart"]["channels"] = [[3, 999]]
         self.assertNotIn('class="graphic scene hd-graphic"', render_report(calc))
+
+    def test_hidden_channel_leaves_no_round_cap(self):
+        css = (ASSETS / "report.css").read_text(encoding="utf-8")
+        self.assertIn("stroke-dasharray: calc(var(--len) * 1px) calc(var(--len) * 1px + 12px)", css)
+        self.assertIn("stroke-dashoffset: calc(var(--len) * 1px + 6px)", css)
+
+    def test_square_steps_date_zeros_grid_then_digits_one_by_one(self):
+        calc = calculation()
+        calc["modules"]["numerology"]["data"] = {"square": {"source_digits": "15011990"}}
+        counts = {1: 3, 5: 1, 9: 2}
+        calc["facts"] += [{"id": f"num.matrix.{d}", "section": "numerology", "label": f"Цифра {d}", "value": counts.get(d, 0)} for d in range(1, 10)]
+        report = render_report(calc)
+        figure = report.split('sq-graphic', 1)[1].split('</figure>', 1)[0]
+        self.assertEqual(6, figure.count('<span class="s-in s-pop" style="--k:0;'))
+        self.assertEqual(2, figure.count('class="zero s-in s-pop"'))
+        self.assertIn('class="sq-note s-in" style="--k:2"', figure)
+        self.assertEqual(9, figure.count('style="--k:3;--j:'))
+        self.assertIn("Цифра 1: 3", figure)
+        self.assertIn("Цифра 2: 0", figure)
+        # шесть ненулевых цифр даты ложатся по очереди на шагах 4–9; пустые ячейки — прочерк после последней
+        steps = sorted(int(k) for k in re.findall(r'<span class="s-in s-pop" style="--k:(\d+)">[1-9]</span>', figure))
+        self.assertEqual([4, 5, 6, 7, 8, 9], steps)
+        self.assertEqual(6, figure.count('style="--k:10;--j:'))
+        self.assertEqual(6, figure.count('>—</span>'))
+
+    def test_scenes_script_has_reverse_replay_hidden_button_and_intro(self):
+        js = (ASSETS / "scenes.js").read_text(encoding="utf-8")
+        css = (ASSETS / "report.css").read_text(encoding="utf-8")
+        self.assertIn("gs-back", js)
+        self.assertIn("sessionStorage", js)
+        self.assertIn("startViewTransition", js)
+        self.assertIn(".replay { position: absolute; width: 1px; height: 1px;", css)
+        self.assertIn(".gm .scene.gs-back:not(.hd-graphic)", css)
+        self.assertIn("html.gm.pa-back .pa-art", css)
 
     def test_scenes_have_final_frame_without_javascript(self):
         calc = calculation()
