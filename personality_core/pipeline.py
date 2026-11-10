@@ -12,6 +12,7 @@ import tempfile
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .arithmetic import CONVENTION, archetypes, gematria, numerology
+from .ephemeris import ASPECTS_CONVENTION, aspects as compute_aspects
 
 SCHEMA_VERSION = 2
 MODULES = ('human_design', 'gematria', 'numerology', 'astrology', 'archetypes')
@@ -163,8 +164,11 @@ def validate_input(value):
 
 
 def _astrology(raw):
-    return {'planets': {key:{'longitude': raw['personality'][name]['longitude'],
-                              'sign': raw['personality'][name]['sign']} for key,name in PLANETS.items()},
+    planets={key:{'longitude': raw['personality'][name]['longitude'],
+                  'sign': raw['personality'][name]['sign']} for key,name in PLANETS.items()}
+    return {'planets': planets,
+            'aspects_convention': ASPECTS_CONVENTION,
+            'aspects': compute_aspects({key:point['longitude'] for key,point in planets.items()}),
             'ascendant': {'longitude':raw['astro']['asc_deg'],'sign':raw['astro']['Асцендент']},
             'midheaven': {'longitude':raw['astro']['mc_deg'],'sign':raw['astro']['Середина неба']},
             'provenance':raw['provenance']}
@@ -210,6 +214,8 @@ def _astronomical_modules(value):
             for key in ('longitude','sign'):
                 if len({canonical_json(s['astrology'][body][key]) for s in snapshots})>1:
                     varying.append('astrology.'+body+'.'+key)
+        if len({canonical_json([[a['planets'],a['kind']] for a in s['astrology']['aspects']]) for s in snapshots})>1:
+            varying.append('astrology.aspects')
         window={'method':'wall-time samples every 15 minutes plus endpoints and center',
                 'half_width_minutes':width,'sample_count':len(snapshots),'varied':varying,
                 'samples':snapshots,'interval_reliability_established':False}
@@ -320,6 +326,14 @@ def calculate(input_dict):
              'Расчётный момент солнечной дуги 88° до рождения; '+central)
         for planet,point in modules['astrology']['data']['planets'].items():
             fact('astro.'+planet+'.longitude','astrology',PLANETS[planet],point['longitude'],str(point['sign'])+'; '+central)
+        group_labels={'harmonious':'гармоничный','tense':'напряжённый'}
+        for item in modules['astrology']['data']['aspects']:
+            first,second=item['planets']
+            fact('astro.aspect.'+first+'.'+second,'astrology',PLANETS[first]+' — '+PLANETS[second]+': '+item['name'],
+                 {'planets':item['planets'],'kind':item['kind'],'group':item['group'],'angle':item['angle'],
+                  'exact':item['exact'],'deviation':item['deviation'],'orb':item['orb']},
+                 'Аспект ('+group_labels[item['group']]+'): угол '+str(item['angle'])+'°, отклонение от точного '+str(item['deviation'])
+                 +'° при орбе '+str(item['orb'])+'°; условность '+ASPECTS_CONVENTION+', соединения не считаются. '+central)
         for key,label in (('ascendant','Асцендент'),('midheaven','Середина неба')):
             point=modules['astrology']['data'][key]
             fact('astro.'+key+'.longitude','astrology',label,point['longitude'],str(point['sign'])+'; приближённая модель ASC/MC. '+central)
@@ -328,6 +342,7 @@ def calculate(input_dict):
                   'backend':value.get('backend','astronomy') if value['time_accuracy']!='unknown' else None,
                   'validation_scope':'structure and references, not semantic review'}}
     if modules['human_design']['status']=='computed':
+        calculation['provenance']['aspects_convention']=ASPECTS_CONVENTION
         calculation['provenance']['ephemeris']=modules['human_design']['data']['provenance']
     calculation['calculation_id']=calculation_id(calculation)
     validate_calculation(calculation)

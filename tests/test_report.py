@@ -397,10 +397,11 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("planet-legend", report)
         self.assertNotIn("Таблица положений планет", report)
         self.assertNotIn("chart-instruction", report)
-        figure = report.split('astrology-graphic', 1)[1].split('</figure>', 1)[0]
+        figure = report.split('<figure class="graphic scene astrology-graphic">', 1)[1].split('</figure>', 1)[0]
         self.assertNotIn("<figcaption>", figure)
         self.assertNotIn("<ol", figure)
-        self.assertNotIn("аспект", figure.lower())  # в расчёте аспектов нет: круг их не рисует
+        self.assertNotIn("аспект", figure.lower())  # фактов аспектов нет: круг их не рисует
+        self.assertNotIn("w-asp", figure)
         # доступное описание круга хранит положения без списка на странице
         self.assertIn("2.123°", report)
         # плотная группа раздвигается по дуге, долготы не меняются: 10 кружков, расстояние между центрами не меньше диаметра
@@ -425,6 +426,45 @@ class ReportTests(unittest.TestCase):
         axis = re.search(r'<line class="w-axis s-draw" x1="([\d.]+)" y1="([\d.]+)"', report)
         self.assertLess(float(axis.group(1)), 100)  # конец оси Асцендента — слева от центра
         self.assertIn("приближённо", report)
+
+    def _aspect_calc(self, *aspects):
+        calc = calculation()
+        calc["facts"] += [{"id": "astro.sun.longitude", "section": "astrology", "label": "Солнце", "value": 177.074},
+                          {"id": "astro.saturn.longitude", "section": "astrology", "label": "Сатурн", "value": 18.293},
+                          {"id": "astro.neptune.longitude", "section": "astrology", "label": "Нептун", "value": 297.27},
+                          {"id": "astro.mars.longitude", "section": "astrology", "label": "Марс", "value": 233.836}]
+        for first, second, kind, deviation in aspects:
+            calc["facts"].append({"id": f"astro.aspect.{first}.{second}", "section": "astrology", "label": "аспект",
+                                  "value": {"planets": [first, second], "kind": kind, "deviation": deviation}})
+        return calc
+
+    def test_aspect_lines_legend_and_description(self):
+        report = render_report(self._aspect_calc(("sun", "neptune", "trine", 0.196), ("sun", "mars", "sextile", 3.238),
+                                                 ("sun", "saturn", "square", 5.0)))
+        figure = report.split('<figure class="graphic scene astrology-graphic">', 1)[1].split('</figure>', 1)[0]
+        self.assertEqual(2, figure.count('class="w-asp w-asp--h s-draw"'))
+        self.assertEqual(1, figure.count('class="w-asp w-asp--t s-draw"'))
+        self.assertIn("гармоничные аспекты: трин 120°, секстиль 60°", figure)
+        self.assertIn("напряжённые: квадрат 90°, оппозиция 180°", figure)
+        self.assertIn("Аспекты: Солнце — Нептун, трин; Солнце — Марс, секстиль; Солнце — Сатурн, квадрат.", figure)
+        self.assertIn("Солнце — Нептун: трин 120° (отклонение 0.196°)", figure)
+        # линия идёт между точками планет на внутреннем круге (радиус 118), а не из центра
+        line = re.search(r'<line class="w-asp w-asp--h s-draw" x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)"', figure)
+        for x, y in ((line.group(1), line.group(2)), (line.group(3), line.group(4))):
+            self.assertAlmostEqual(118, math.hypot(float(x) - 300, float(y) - 300), delta=0.2)
+
+    def test_aspects_skip_unknown_planets_and_escape_text(self):
+        calc = self._aspect_calc(("sun", "pluto", "trine", 1))  # Плутона нет на круге
+        calc["facts"].append({"id": "astro.aspect.sun.saturn", "section": "astrology", "label": "<b>x</b>",
+                              "value": {"planets": ["sun", "saturn"], "kind": "<script>alert(1)</script>"}})
+        calc["facts"].append({"id": "astro.aspect.sun.mars", "section": "astrology", "label": "x",
+                              "value": {"planets": ["sun", "mars"], "kind": "square", "deviation": "<img onerror=x>"}})
+        report = render_report(calc)
+        figure = report.split('<figure class="graphic scene astrology-graphic">', 1)[1].split('</figure>', 1)[0]
+        self.assertEqual(1, figure.count('class="w-asp'))  # только корректный квадрат Солнце — Марс
+        self.assertNotIn("<script>alert", report)
+        self.assertNotIn("<img onerror", report)
+        self.assertNotIn("<b>x</b>", figure)
 
     def test_bodygraph_draws_existing_chart_only(self):
         calc = calculation()
@@ -560,3 +600,12 @@ class SiteSafetyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AspectViewMatchesCalculation(unittest.TestCase):
+    """Виды и углы аспектов отчёта совпадают с расчётом: смена ASPECT_KINDS без отчёта ловится тестом."""
+
+    def test_same_kinds_names_and_angles(self):
+        from personality_core import ephemeris, report
+        calc = {kind: (name, exact, "h" if group == "harmonious" else "t") for kind, name, exact, _orb, group in ephemeris.ASPECT_KINDS}
+        self.assertEqual(calc, report.ASPECT_VIEW)

@@ -1076,6 +1076,113 @@
             "sign": "17°26' Скорпион"
           }
         },
+        "aspects_convention": "aspects-v1",
+        "aspects": [
+          {
+            "planets": [
+              "moon",
+              "mercury"
+            ],
+            "kind": "trine",
+            "name": "трин",
+            "group": "harmonious",
+            "angle": 115.496,
+            "exact": 120,
+            "deviation": 4.504,
+            "orb": 7
+          },
+          {
+            "planets": [
+              "moon",
+              "mars"
+            ],
+            "kind": "square",
+            "name": "квадрат",
+            "group": "tense",
+            "angle": 93.883,
+            "exact": 90,
+            "deviation": 3.883,
+            "orb": 7
+          },
+          {
+            "planets": [
+              "moon",
+              "saturn"
+            ],
+            "kind": "trine",
+            "name": "трин",
+            "group": "harmonious",
+            "angle": 121.362,
+            "exact": 120,
+            "deviation": 1.362,
+            "orb": 7
+          },
+          {
+            "planets": [
+              "moon",
+              "neptune"
+            ],
+            "kind": "trine",
+            "name": "трин",
+            "group": "harmonious",
+            "angle": 116.623,
+            "exact": 120,
+            "deviation": 3.377,
+            "orb": 7
+          },
+          {
+            "planets": [
+              "moon",
+              "pluto"
+            ],
+            "kind": "sextile",
+            "name": "секстиль",
+            "group": "harmonious",
+            "angle": 61.489,
+            "exact": 60,
+            "deviation": 1.489,
+            "orb": 5
+          },
+          {
+            "planets": [
+              "jupiter",
+              "uranus"
+            ],
+            "kind": "opposition",
+            "name": "оппозиция",
+            "group": "tense",
+            "angle": 176.776,
+            "exact": 180,
+            "deviation": 3.224,
+            "orb": 8
+          },
+          {
+            "planets": [
+              "saturn",
+              "pluto"
+            ],
+            "kind": "sextile",
+            "name": "секстиль",
+            "group": "harmonious",
+            "angle": 59.873,
+            "exact": 60,
+            "deviation": 0.127,
+            "orb": 5
+          },
+          {
+            "planets": [
+              "neptune",
+              "pluto"
+            ],
+            "kind": "sextile",
+            "name": "секстиль",
+            "group": "harmonious",
+            "angle": 55.134,
+            "exact": 60,
+            "deviation": 4.866,
+            "orb": 5
+          }
+        ],
         "ascendant": {
           "longitude": 45.28447666575346,
           "sign": "15°17' Телец"
@@ -1674,6 +1781,150 @@
       "detail": "17°26' Скорпион; Из hd.compute, см. полный расчёт и provenance."
     },
     {
+      "id": "astro.aspect.moon.mercury",
+      "section": "astrology",
+      "label": "Луна — Меркурий: трин",
+      "value": {
+        "planets": [
+          "moon",
+          "mercury"
+        ],
+        "kind": "trine",
+        "group": "harmonious",
+        "angle": 115.496,
+        "exact": 120,
+        "deviation": 4.504,
+        "orb": 7
+      },
+      "detail": "Аспект (гармоничный): угол 115.496°, отклонение от точного 4.504° при орбе 7°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.aspect.moon.mars",
+      "section": "astrology",
+      "label": "Луна — Марс: квадрат",
+      "value": {
+        "planets": [
+          "moon",
+          "mars"
+        ],
+        "kind": "square",
+        "group": "tense",
+        "angle": 93.883,
+        "exact": 90,
+        "deviation": 3.883,
+        "orb": 7
+      },
+      "detail": "Аспект (напряжённый): угол 93.883°, отклонение от точного 3.883° при орбе 7°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.aspect.moon.saturn",
+      "section": "astrology",
+      "label": "Луна — Сатурн: трин",
+      "value": {
+        "planets": [
+          "moon",
+          "saturn"
+        ],
+        "kind": "trine",
+        "group": "harmonious",
+        "angle": 121.362,
+        "exact": 120,
+        "deviation": 1.362,
+        "orb": 7
+      },
+      "detail": "Аспект (гармоничный): угол 121.362°, отклонение от точного 1.362° при орбе 7°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.aspect.moon.neptune",
+      "section": "astrology",
+      "label": "Луна — Нептун: трин",
+      "value": {
+        "planets": [
+          "moon",
+          "neptune"
+        ],
+        "kind": "trine",
+        "group": "harmonious",
+        "angle": 116.623,
+        "exact": 120,
+        "deviation": 3.377,
+        "orb": 7
+      },
+      "detail": "Аспект (гармоничный): угол 116.623°, отклонение от точного 3.377° при орбе 7°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.aspect.moon.pluto",
+      "section": "astrology",
+      "label": "Луна — Плутон: секстиль",
+      "value": {
+        "planets": [
+          "moon",
+          "pluto"
+        ],
+        "kind": "sextile",
+        "group": "harmonious",
+        "angle": 61.489,
+        "exact": 60,
+        "deviation": 1.489,
+        "orb": 5
+      },
+      "detail": "Аспект (гармоничный): угол 61.489°, отклонение от точного 1.489° при орбе 5°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.aspect.jupiter.uranus",
+      "section": "astrology",
+      "label": "Юпитер — Уран: оппозиция",
+      "value": {
+        "planets": [
+          "jupiter",
+          "uranus"
+        ],
+        "kind": "opposition",
+        "group": "tense",
+        "angle": 176.776,
+        "exact": 180,
+        "deviation": 3.224,
+        "orb": 8
+      },
+      "detail": "Аспект (напряжённый): угол 176.776°, отклонение от точного 3.224° при орбе 8°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.aspect.saturn.pluto",
+      "section": "astrology",
+      "label": "Сатурн — Плутон: секстиль",
+      "value": {
+        "planets": [
+          "saturn",
+          "pluto"
+        ],
+        "kind": "sextile",
+        "group": "harmonious",
+        "angle": 59.873,
+        "exact": 60,
+        "deviation": 0.127,
+        "orb": 5
+      },
+      "detail": "Аспект (гармоничный): угол 59.873°, отклонение от точного 0.127° при орбе 5°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
+      "id": "astro.aspect.neptune.pluto",
+      "section": "astrology",
+      "label": "Нептун — Плутон: секстиль",
+      "value": {
+        "planets": [
+          "neptune",
+          "pluto"
+        ],
+        "kind": "sextile",
+        "group": "harmonious",
+        "angle": 55.134,
+        "exact": 60,
+        "deviation": 4.866,
+        "orb": 5
+      },
+      "detail": "Аспект (гармоничный): угол 55.134°, отклонение от точного 4.866° при орбе 5°; условность aspects-v1, соединения не считаются. Из hd.compute, см. полный расчёт и provenance."
+    },
+    {
       "id": "astro.ascendant.longitude",
       "section": "astrology",
       "label": "Асцендент",
@@ -1697,6 +1948,7 @@
     "arithmetic_convention": "arithmetic-v1",
     "backend": "astronomy",
     "validation_scope": "structure and references, not semantic review",
+    "aspects_convention": "aspects-v1",
     "ephemeris": {
       "backend": "astronomy",
       "engine_version": "2.1.19",
@@ -1714,5 +1966,5 @@
       }
     }
   },
-  "calculation_id": "aa63f7d07869b3f3481bbd98efb56fc4e94b9521514c81117ba9f02b7557ad0a"
+  "calculation_id": "7bede5586290cfcc5fa6025bcb2c9fa5793ff51888e5312d6752573113c41aa4"
 }

@@ -288,3 +288,71 @@ class NarrativeWarningTests(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+
+
+class AspectTests(unittest.TestCase):
+    KEYS = ('sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto')
+
+    @staticmethod
+    def pair(distance):
+        from personality_core.ephemeris import aspects
+        return aspects({'sun': 10.0, 'moon': 10.0 + distance})
+
+    def test_orb_boundaries_are_inclusive(self):
+        for exact, orb, kind in ((120, 7, 'trine'), (60, 5, 'sextile'), (90, 7, 'square'), (180, 8, 'opposition')):
+            for distance in (exact - orb, exact + orb):
+                if distance > 180:
+                    continue
+                found = self.pair(distance)
+                self.assertEqual([kind], [a['kind'] for a in found], (kind, distance))
+                self.assertEqual(orb, found[0]['deviation'])
+            if exact + orb <= 180:
+                self.assertEqual([], [a for a in self.pair(exact + orb + 0.001) if a['kind'] == kind])
+            self.assertEqual([], [a for a in self.pair(exact - orb - 0.001) if a['kind'] == kind])
+
+    def test_no_conjunctions_and_angle_goes_the_short_way(self):
+        for distance in (0, 3, 5.5):
+            self.assertEqual([], self.pair(distance))
+        from personality_core.ephemeris import aspects
+        found = aspects({'sun': 350.0, 'moon': 110.0})  # разность 240 -> 120 по короткой дуге
+        self.assertEqual(('trine', 120.0, 0.0), (found[0]['kind'], found[0]['angle'], found[0]['deviation']))
+        self.assertEqual('harmonious', found[0]['group'])
+        self.assertEqual('tense', self.pair(90)[0]['group'])
+
+    def test_no_longitudes_no_aspects(self):
+        from personality_core.ephemeris import aspects
+        self.assertEqual([], aspects({}))
+        self.assertEqual([], aspects({'sun': None, 'moon': 100.0, 'mars': float('nan'), 'venus': 400.0, 'jupiter': True}))
+
+    def test_author_reference(self):
+        from personality_core.ephemeris import aspects
+        values = [177.074, 41.930, 159.776, 219.157, 233.836, 312.716, 18.293, 304.969, 297.270, 243.205]
+        found = [(a['planets'][0], a['planets'][1], a['kind']) for a in aspects(dict(zip(self.KEYS, values)))]
+        self.assertEqual(12, len(found))
+        self.assertIn(('sun', 'neptune', 'trine'), found)
+        self.assertIn(('uranus', 'pluto', 'sextile'), found)
+        self.assertIn(('moon', 'venus', 'opposition'), found)
+
+    def test_calculation_has_aspect_facts_and_convention(self):
+        with patch('hd.compute', fake_compute):
+            result = calculate(json.loads((ROOT / 'examples' / 'input.json').read_text(encoding='utf-8')))
+        # синтетические долготы все равны 123.5: соединений нет, аспектов нет
+        self.assertEqual([], result['modules']['astrology']['data']['aspects'])
+        self.assertEqual('aspects-v1', result['modules']['astrology']['data']['aspects_convention'])
+        self.assertEqual('aspects-v1', result['provenance']['aspects_convention'])
+        self.assertFalse([f for f in result['facts'] if f['id'].startswith('astro.aspect.')])
+
+    def test_aspect_fact_is_made_from_longitudes(self):
+        def compute(*args, **kwargs):
+            raw = fake_compute(*args, **kwargs)
+            raw['personality']['Солнце']['longitude'] = 10.0
+            raw['personality']['Луна']['longitude'] = 130.0
+            return raw
+        with patch('hd.compute', compute):
+            result = calculate(load_json(ROOT / 'examples/input.json'))
+        facts = {f['id']: f for f in result['facts']}
+        fact = facts['astro.aspect.sun.moon']
+        self.assertEqual(('trine', 'harmonious', 120.0, 0.0), (fact['value']['kind'], fact['value']['group'],
+                                                               fact['value']['angle'], fact['value']['deviation']))
+        self.assertEqual('Солнце — Луна: трин', fact['label'])
+        validate_calculation(result)

@@ -330,18 +330,42 @@ def _bars(facts: dict[str, dict]) -> str:
 PLANET_SHORT = ("Су", "Лу", "Ме", "Ве", "Ма", "Юп", "Са", "Ур", "Не", "Пл")
 
 
+# Виды аспектов отчёта (совпадают с personality_core.ephemeris.ASPECT_KINDS); группа берётся отсюда, а не из данных.
+ASPECT_VIEW = {"trine": ("трин", 120, "h"), "sextile": ("секстиль", 60, "h"),
+               "square": ("квадрат", 90, "t"), "opposition": ("оппозиция", 180, "t")}
+
+
+def _aspects(facts: dict[str, dict], placed: dict[str, float]) -> list[tuple]:
+    """Aspects from facts `astro.aspect.*` between planets that are on the wheel; anything malformed is skipped."""
+    found = []
+    for identifier, fact in facts.items():
+        value = fact.get("value") if identifier.startswith("astro.aspect.") else None
+        if not isinstance(value, dict) or value.get("kind") not in ASPECT_VIEW:
+            continue
+        pair = value.get("planets")
+        if (not isinstance(pair, list) or len(pair) != 2 or pair[0] == pair[1]
+                or not all(isinstance(key, str) and key in placed for key in pair)):
+            continue
+        deviation = _number({"value": value.get("deviation")})
+        found.append((pair[0], pair[1], value["kind"], deviation))
+    return found
+
+
 def _astrology(facts: dict[str, dict]) -> str:
     """Natal wheel: signs around the ring, planets on their degrees, axes of Ascendant and MC.
 
     Sized for a 375 px phone (viewBox 600): sign labels are smaller than their ring, planet circles sit on
     their own track and neighbours closer than GAP degrees are spread along the arc, so nothing crosses.
     The wheel is turned so that the Ascendant (if the calculation has it) is on the left; longitudes grow
-    counter-clockwise. No houses, aspects or lists under the circle."""
+    counter-clockwise. Aspect lines (if the calculation has `astro.aspect.*` facts) connect the planet points on the
+    inner circle; houses and lists under the circle are not drawn."""
     planets = []
+    keys = {}
     for planet, label, short in zip(PLANETS, PLANET_NAMES, PLANET_SHORT):
         longitude = _number(facts.get(f"astro.{planet}.longitude"))
         if longitude is not None and 0 <= longitude < 360:
             planets.append((label, short, longitude))
+            keys[planet] = (label, longitude)
     if not planets:
         return ""
     axes_data = []
@@ -372,6 +396,13 @@ def _astrology(facts: dict[str, dict]) -> str:
         parts.append(line(pt(axis, r_in), pt(axis + 180, r_in), "w-axis s-draw", 4, step * 4))
         x, y = pt(axis, r_axis)
         parts.append(f'<text class="w-ax s-in" x="{x}" y="{y}" dy="0.36em" text-anchor="middle" style="--k:6"><title>{_e(name)} (приближённо)</title>{short}≈</text>')
+    aspect_list = _aspects(facts, {key: value[1] for key, value in keys.items()})
+    for step, (first, second, kind, deviation) in enumerate(aspect_list):
+        name, exact, group = ASPECT_VIEW[kind]
+        note = f" (отклонение {_longitude_text(deviation)}°)" if deviation is not None else ""
+        parts.append(line(pt(keys[first][1], r_inner), pt(keys[second][1], r_inner),
+                          f"w-asp w-asp--{group} s-draw", 12, step)
+                     .replace("/>", f"><title>{_e(keys[first][0])} — {_e(keys[second][0])}: {name} {exact}°{_e(note)}</title></line>"))
     order = sorted(range(len(planets)), key=lambda i: planets[i][2])
     placed = {i: planets[i][2] for i in order}
     gap = 13.5
@@ -403,11 +434,20 @@ def _astrology(facts: dict[str, dict]) -> str:
                      f'<text class="w-pt" x="{tx}" y="{ty}" dy="0.36em" text-anchor="middle">{short}</text></g>')
     description = "; ".join(f"{label} — {SIGNS[int(longitude // 30)]}, {_longitude_text(longitude)}°" for label, _, longitude in planets)
     axes_text = " Оси: " + "; ".join(f"{name} {_longitude_text(axis)}° (приближённо)" for _, name, axis in axes_data) + "." if axes_data else ""
+    aspects_text = ""
+    if aspect_list:
+        aspects_text = " Аспекты: " + "; ".join(
+            f"{keys[a][0]} — {keys[b][0]}, {ASPECT_VIEW[kind][0]}" for a, b, kind, _ in aspect_list) + "."
     graphic = ('<svg class="chart wheel-chart" viewBox="0 0 600 600" role="img" aria-labelledby="astro-chart-title astro-chart-desc">'
                '<title id="astro-chart-title">Круг эклиптических долгот</title>'
-               f'<desc id="astro-chart-desc">Двенадцать знаков по 30 градусов, планеты на своих градусах. {_e(description)}.{_e(axes_text)}</desc>'
+               f'<desc id="astro-chart-desc">Двенадцать знаков по 30 градусов, планеты на своих градусах. {_e(description)}.{_e(axes_text)}{_e(aspects_text)}</desc>'
                + "".join(parts) + '</svg>')
-    return '<figure class="graphic scene astrology-graphic"><h3>Планеты в зодиакальном круге</h3>' + graphic + '</figure>'
+    legend = ""
+    if aspect_list:
+        legend = ('<ul class="graph-legend aspect-legend">'
+                  '<li><span class="swatch asp-h"></span>гармоничные аспекты: трин 120°, секстиль 60°</li>'
+                  '<li><span class="swatch asp-t"></span>напряжённые: квадрат 90°, оппозиция 180°</li></ul>')
+    return '<figure class="graphic scene astrology-graphic"><h3>Планеты в зодиакальном круге</h3>' + graphic + legend + '</figure>'
 
 
 def _gematria(module: dict) -> str:

@@ -271,6 +271,9 @@ html.gm.pa-back body { overflow: hidden; }
 .swatch { display: inline-block; width: .9rem; height: .9rem; border-radius: 3px; }
 .swatch.defined { background: var(--accent); }
 .swatch.open { border: 1.5px solid var(--rose); }
+.swatch.asp-h, .swatch.asp-t { height: .2rem; width: 1.2rem; border-radius: 2px; }
+.swatch.asp-h { background: var(--gold); }
+.swatch.asp-t { background: var(--rose); }
 .swatch.channel { height: .2rem; width: 1.2rem; background: var(--gold); border-radius: 2px; }
 
 /* бодиграф: девять центров с подписями, легенда; без подписи-figcaption.
@@ -357,6 +360,9 @@ html.gm.pa-back body { overflow: hidden; }
 .chart text.w-sign { font-size: 19px; font-weight: 600; letter-spacing: 0; fill: var(--muted); }
 .chart .w-axis { stroke: var(--gold); stroke-width: 2; stroke-dasharray: var(--len); stroke-dashoffset: 0; }
 .chart text.w-ax { font-size: 19px; font-weight: 700; fill: var(--gold-ink); }
+.chart .w-asp { stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: var(--len); stroke-dashoffset: 0; opacity: .85; }
+.chart .w-asp--h { stroke: var(--gold); }
+.chart .w-asp--t { stroke: var(--rose); }
 .chart .w-lead { stroke: var(--rose); stroke-width: 1; opacity: .7; }
 .chart .w-dot { fill: var(--rose); stroke: none; }
 .chart .w-pl { fill: var(--surface); stroke: var(--rose); stroke-width: 1.6; }

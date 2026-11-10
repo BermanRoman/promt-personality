@@ -34,3 +34,39 @@ def longitude(name, jd_utc):
     else:
         vector = astronomy.GeoVector(body, time, True)
     return astronomy.Ecliptic(vector).elon % 360.0
+
+
+# Условность расчёта aspects-v1: виды, орбы и группы выбраны автором, это не астрономический факт.
+# Соединения в список не входят; считаются только пары планет по готовым эклиптическим долготам.
+ASPECTS_CONVENTION = "aspects-v1"
+ASPECT_KINDS = (
+    ("trine", "трин", 120, 7, "harmonious"),
+    ("sextile", "секстиль", 60, 5, "harmonious"),
+    ("square", "квадрат", 90, 7, "tense"),
+    ("opposition", "оппозиция", 180, 8, "tense"),
+)
+
+
+def aspects(longitudes):
+    """Aspects between planets from ecliptic longitudes: dict {planet_key: degrees}, order = dict order.
+
+    A pair gets at most one aspect (the first matching kind; orbs of the kinds never overlap).
+    Missing, non-finite or out-of-range longitudes are skipped, so no longitude means no aspects.
+    """
+    import math
+    valid = [(key, value) for key, value in longitudes.items()
+             if isinstance(value, (int, float)) and not isinstance(value, bool)
+             and math.isfinite(value) and 0 <= value < 360]
+    result = []
+    for index, (first, a) in enumerate(valid):
+        for second, b in valid[index + 1:]:
+            distance = abs(a - b) % 360
+            distance = min(distance, 360 - distance)
+            for kind, name, exact, orb, group in ASPECT_KINDS:
+                deviation = abs(distance - exact)
+                if deviation <= orb:
+                    result.append({"planets": [first, second], "kind": kind, "name": name, "group": group,
+                                   "angle": round(distance, 3), "exact": exact,
+                                   "deviation": round(deviation, 3), "orb": orb})
+                    break
+    return result
